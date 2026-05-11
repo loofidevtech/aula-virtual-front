@@ -22,6 +22,8 @@ interface NavbarProps {
   currentView: View
 }
 
+import Image from "next/image"
+
 export function Navbar({
   isLoggedIn,
   user,
@@ -43,14 +45,16 @@ export function Navbar({
         {/* Logo */}
         <button
           onClick={() => onNavigate(isLoggedIn ? "dashboard" : "landing")}
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          className="flex items-center transition-all duration-300 hover:scale-105 active:scale-95"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold tracking-tight">
-            LoofiDev <span className="text-primary">Academy</span>
-          </span>
+          <Image
+            src="/logo_principal.jpg"
+            alt="LoofiDev Academy Logo"
+            width={220}
+            height={56}
+            className="h-10 w-auto object-contain md:h-12"
+            priority
+          />
         </button>
 
         {/* Center Navigation */}

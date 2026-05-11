@@ -16,6 +16,8 @@ interface AuthModalProps {
   onSwitchToLogin: () => void
 }
 
+import Image from "next/image"
+
 export function AuthModal({
   type,
   onClose,
@@ -62,13 +64,14 @@ export function AuthModal({
         </button>
 
         {/* Logo */}
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold">
-            LoofiDev <span className="text-primary">Academy</span>
-          </span>
+        <div className="mb-8 flex items-center justify-center">
+          <Image
+            src="/logo_principal.jpg"
+            alt="LoofiDev Academy Logo"
+            width={280}
+            height={80}
+            className="h-20 w-auto object-contain drop-shadow-sm"
+          />
         </div>
 
         {/* Title */}

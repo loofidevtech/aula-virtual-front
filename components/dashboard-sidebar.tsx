@@ -17,6 +17,8 @@ interface DashboardSidebarProps {
   onClose: () => void
 }
 
+import Image from "next/image"
+
 export function DashboardSidebar({
   currentView,
   onNavigate,
@@ -55,15 +57,23 @@ export function DashboardSidebar({
         </button>
 
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
+        <div className="flex h-20 items-center gap-3 border-b border-sidebar-border px-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5 p-1">
+            <Image
+              src="/logo_principal.jpg"
+              alt="Logo"
+              width={48}
+              height={48}
+              className="h-full w-full object-contain"
+            />
           </div>
-          <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">
-              Panel de Alumno
+          <div className="flex flex-col">
+            <p className="text-sm font-bold tracking-tight text-sidebar-foreground">
+              Panel Academy
             </p>
-            <p className="text-xs text-muted-foreground">LoofiDev Academy</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+              LoofiDev Academy
+            </p>
           </div>
         </div>
 
