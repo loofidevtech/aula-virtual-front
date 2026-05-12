@@ -44,164 +44,52 @@ export function ExamModule({
   sidebarOpen,
   setSidebarOpen,
 }: ExamModuleProps) {
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, number>>({})
-  const [timeRemaining, setTimeRemaining] = useState(90 * 60) // 90 minutes in seconds
-  const [showFinishDialog, setShowFinishDialog] = useState(false)
   const [examFinished, setExamFinished] = useState(false)
 
-  const questions: Question[] = [
-    {
-      id: "1",
-      text: "Si un tren viaja a 80 km/h y recorre una distancia de 240 km, ¿cuánto tiempo tardará en completar el recorrido?",
-      options: ["2 horas", "3 horas", "4 horas", "2.5 horas"],
-      correctAnswer: 1,
+  const courses_data: Record<string, { title: string; color: string; questions: Question[]; icon: any; description: string }> = {
+    matematica: {
+      title: "Matemática",
+      color: "from-[#5A9BD4] to-[#4A8BC4]",
+      icon: <Clock className="h-12 w-12" />,
+      description: "Domina los fundamentos de la aritmética y geometría con Albert.",
+      questions: [
+        { id: "m1", text: "¿Cuánto es 2 + 2?", options: ["3", "4", "5", "6"], correctAnswer: 1 },
+        { id: "m2", text: "Si tengo 3 manzanas y me regalan 2, ¿cuántas tengo?", options: ["4", "5", "6", "7"], correctAnswer: 1 },
+        { id: "m3", text: "¿Cuál es el resultado de 10 / 2?", options: ["2", "4", "5", "10"], correctAnswer: 2 },
+      ]
     },
-    {
-      id: "2",
-      text: "¿Cuál es el resultado de la operación: (3² + 4²)^½?",
-      options: ["5", "7", "12", "25"],
-      correctAnswer: 0,
+    algebra: {
+      title: "Álgebra",
+      color: "from-[#D95C14] to-[#C94C04]",
+      icon: <ArrowRight className="h-12 w-12" />,
+      description: "Resuelve ecuaciones y polinomios como un experto pre-universitario.",
+      questions: [
+        { id: "a1", text: "Si x + 5 = 10, ¿cuánto vale x?", options: ["2", "3", "5", "10"], correctAnswer: 2 },
+        { id: "a2", text: "Factoriza: x² - 4", options: ["(x+2)(x-2)", "(x-2)(x-2)", "(x+4)(x-4)", "(x+2)(x+2)"], correctAnswer: 0 },
+        { id: "a3", text: "¿Cuál es el valor de 2x si x = 4?", options: ["6", "8", "10", "12"], correctAnswer: 1 },
+      ]
     },
-    {
-      id: "3",
-      text: "En una progresión aritmética, si el primer término es 5 y la diferencia común es 3, ¿cuál es el décimo término?",
-      options: ["32", "35", "30", "27"],
-      correctAnswer: 0,
-    },
-    {
-      id: "4",
-      text: "¿Cuál de las siguientes opciones representa la factorización de x² - 9?",
-      options: [
-        "(x + 3)(x + 3)",
-        "(x - 3)(x - 3)",
-        "(x + 3)(x - 3)",
-        "(x + 9)(x - 1)",
-      ],
-      correctAnswer: 2,
-    },
-    {
-      id: "5",
-      text: "Si el área de un círculo es 64π cm², ¿cuál es su radio?",
-      options: ["4 cm", "8 cm", "16 cm", "32 cm"],
-      correctAnswer: 1,
-    },
-    {
-      id: "6",
-      text: "¿Cuál es el valor de sen(30°)?",
-      options: ["1/2", "√2/2", "√3/2", "1"],
-      correctAnswer: 0,
-    },
-    {
-      id: "7",
-      text: "Si log₁₀(x) = 2, ¿cuál es el valor de x?",
-      options: ["20", "100", "1000", "10"],
-      correctAnswer: 1,
-    },
-    {
-      id: "8",
-      text: "¿Cuántas diagonales tiene un hexágono?",
-      options: ["6", "9", "12", "15"],
-      correctAnswer: 1,
-    },
-    {
-      id: "9",
-      text: "Si f(x) = 2x + 3, ¿cuál es el valor de f(5)?",
-      options: ["10", "13", "15", "8"],
-      correctAnswer: 1,
-    },
-    {
-      id: "10",
-      text: "¿Cuál es la derivada de f(x) = x³?",
-      options: ["x²", "3x", "3x²", "x³"],
-      correctAnswer: 2,
-    },
-    {
-      id: "11",
-      text: "En un triángulo rectángulo, si los catetos miden 6 y 8 cm, ¿cuánto mide la hipotenusa?",
-      options: ["10 cm", "14 cm", "12 cm", "7 cm"],
-      correctAnswer: 0,
-    },
-    {
-      id: "12",
-      text: "¿Cuál es el MCD de 48 y 60?",
-      options: ["6", "12", "24", "4"],
-      correctAnswer: 1,
-    },
-    {
-      id: "13",
-      text: "Si 3x - 7 = 14, ¿cuál es el valor de x?",
-      options: ["7", "3", "21", "5"],
-      correctAnswer: 0,
-    },
-    {
-      id: "14",
-      text: "¿Cuál es el perímetro de un cuadrado de área 49 cm²?",
-      options: ["14 cm", "28 cm", "49 cm", "7 cm"],
-      correctAnswer: 1,
-    },
-    {
-      id: "15",
-      text: "Si el 25% de un número es 40, ¿cuál es el número?",
-      options: ["100", "160", "10", "200"],
-      correctAnswer: 1,
-    },
-    {
-      id: "16",
-      text: "¿Cuál es el volumen de un cubo de arista 5 cm?",
-      options: ["25 cm³", "75 cm³", "125 cm³", "150 cm³"],
-      correctAnswer: 2,
-    },
-    {
-      id: "17",
-      text: "¿Cuál es el valor de (-2)⁴?",
-      options: ["-16", "16", "-8", "8"],
-      correctAnswer: 1,
-    },
-    {
-      id: "18",
-      text: "Si la media de 5 números es 20, ¿cuál es su suma?",
-      options: ["4", "25", "100", "15"],
-      correctAnswer: 2,
-    },
-    {
-      id: "19",
-      text: "¿Cuántos grados tiene la suma de los ángulos internos de un pentágono?",
-      options: ["360°", "540°", "720°", "180°"],
-      correctAnswer: 1,
-    },
-    {
-      id: "20",
-      text: "Si 2^x = 32, ¿cuál es el valor de x?",
-      options: ["4", "5", "6", "3"],
-      correctAnswer: 1,
-    },
-  ]
+    ingles: {
+      title: "Inglés",
+      color: "from-[#8EBA21] to-[#7EAA11]",
+      icon: <CheckCircle2 className="h-12 w-12" />,
+      description: "Mejora tu vocabulario y gramática para el mundo global.",
+      questions: [
+        { id: "i1", text: "How do you say 'Hola' in English?", options: ["Goodbye", "Hello", "Thank you", "Please"], correctAnswer: 1 },
+        { id: "i2", text: "What is the opposite of 'Big'?", options: ["Large", "Small", "Tall", "Short"], correctAnswer: 1 },
+        { id: "i3", text: "Complete: 'She ___ my friend.'", options: ["am", "are", "is", "be"], correctAnswer: 2 },
+      ]
+    }
+  }
 
-  // Timer effect
-  useEffect(() => {
-    if (examFinished) return
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          setExamFinished(true)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [examFinished])
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    const secs = seconds % 60
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  const handleCourseSelect = (courseId: string) => {
+    setSelectedCourse(courseId)
+    setCurrentQuestion(0)
+    setAnswers({})
+    setExamFinished(false)
   }
 
   const handleAnswerSelect = (optionIndex: number) => {
@@ -212,263 +100,174 @@ export function ExamModule({
   }
 
   const handleNext = () => {
+    const questions = courses_data[selectedCourse!].questions
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1)
+    } else {
+      setExamFinished(true)
     }
-  }
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1)
-    }
-  }
-
-  const handleFinish = () => {
-    setShowFinishDialog(true)
-  }
-
-  const confirmFinish = () => {
-    setExamFinished(true)
-    setShowFinishDialog(false)
   }
 
   const calculateScore = () => {
+    const questions = courses_data[selectedCourse!].questions
     let correct = 0
-    Object.entries(answers).forEach(([questionIndex, answer]) => {
-      if (questions[parseInt(questionIndex)]?.correctAnswer === answer) {
-        correct++
-      }
+    Object.entries(answers).forEach(([index, answer]) => {
+      if (questions[parseInt(index)].correctAnswer === answer) correct++
     })
     return correct
   }
 
-  if (examFinished) {
-    const score = calculateScore()
-    const percentage = Math.round((score / questions.length) * 100)
-
+  if (!selectedCourse) {
     return (
-      <div className="flex min-h-[calc(100vh-4rem)]">
-        <DashboardSidebar
-          currentView="exam"
-          onNavigate={onNavigate}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+      <div className="min-h-[calc(100vh-5rem)] bg-[#f8fafc] flex flex-col relative overflow-hidden">
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl -z-10 animate-pulse delay-1000" />
 
-        <div className="flex flex-1 items-center justify-center p-4">
-          <Card className="w-full max-w-md border-border bg-card">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <CheckCircle2 className="h-8 w-8 text-primary" />
+        <div className="flex-1 p-8 md:p-16 flex items-center justify-center">
+          <div className="max-w-7xl w-full space-y-16">
+            <div className="text-center space-y-6">
+              <div className="inline-block px-6 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-sm uppercase tracking-widest animate-in fade-in slide-in-from-bottom duration-700">
+                Módulo de Autoevaluación
               </div>
-              <CardTitle className="text-2xl">¡Simulacro Completado!</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 text-center">
-              <div className="rounded-lg bg-secondary p-6">
-                <p className="text-4xl font-bold text-primary">{percentage}%</p>
-                <p className="text-muted-foreground">
-                  {score} de {questions.length} respuestas correctas
-                </p>
-              </div>
+              <h1 className="text-5xl md:text-8xl font-black text-secondary tracking-tighter animate-in fade-in slide-in-from-top duration-700">
+                Practica con <span className="text-primary italic">Albert</span>
+              </h1>
+              <p className="text-muted-foreground text-2xl font-medium max-w-2xl mx-auto">Pon a prueba tus conocimientos con ejercicios reales diseñados para tu éxito académico.</p>
+            </div>
 
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  Preguntas contestadas:{" "}
-                  <span className="font-medium text-foreground">
-                    {Object.keys(answers).length}
-                  </span>
-                </p>
-                <p>
-                  Preguntas sin contestar:{" "}
-                  <span className="font-medium text-foreground">
-                    {questions.length - Object.keys(answers).length}
-                  </span>
-                </p>
-              </div>
+            <div className="grid md:grid-cols-3 gap-10">
+              {Object.entries(courses_data).map(([id, data], index) => (
+                <div 
+                  key={id}
+                  className="group relative h-[500px] perspective-1000 animate-in fade-in zoom-in duration-700"
+                  style={{ animationDelay: `${index * 200}ms` }}
+                  onClick={() => handleCourseSelect(id)}
+                >
+                  <div className="relative h-full w-full rounded-[3rem] bg-white p-2 shadow-xl transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateX(10deg)_rotateY(-10deg)] group-hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] cursor-pointer overflow-hidden border-2 border-transparent hover:border-primary/20">
+                    {/* Gradient Header */}
+                    <div className={`h-1/2 w-full rounded-[2.5rem] bg-gradient-to-br ${data.color} flex flex-col items-center justify-center p-8 text-white relative overflow-hidden`}>
+                       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] [background-size:20px_20px]" />
+                       <div className="relative z-10 p-6 bg-white/20 backdrop-blur-md rounded-3xl mb-4 group-hover:scale-110 transition-transform duration-500">
+                         {data.icon}
+                       </div>
+                       <h2 className="relative z-10 text-3xl font-black uppercase tracking-tight">{data.title}</h2>
+                    </div>
 
-              <Button onClick={onFinish} className="w-full">
-                Volver al Dashboard
-              </Button>
-            </CardContent>
-          </Card>
+                    <div className="h-1/2 w-full p-10 flex flex-col justify-between items-center text-center">
+                       <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                         {data.description}
+                       </p>
+                       
+                       <div className="w-full space-y-4">
+                         <div className="flex justify-center gap-2">
+                           <span className="px-3 py-1 bg-secondary/10 rounded-full text-[10px] font-black text-secondary uppercase tracking-widest">3 Preguntas</span>
+                           <span className="px-3 py-1 bg-primary/10 rounded-full text-[10px] font-black text-primary uppercase tracking-widest">Nivel Básico</span>
+                         </div>
+                         <Button className="w-full h-16 rounded-2xl bg-secondary hover:bg-primary font-black text-xl text-white shadow-lg shadow-secondary/20 group-hover:shadow-primary/30 transition-all duration-500">
+                           Comenzar Ahora
+                         </Button>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex justify-center pt-8">
+               <Button 
+                variant="ghost" 
+                onClick={() => onNavigate("landing")}
+                className="group flex items-center gap-3 text-xl font-black text-secondary hover:text-primary transition-all"
+               >
+                 <ArrowLeft className="h-6 w-6 group-hover:-translate-x-2 transition-transform" />
+                 Volver al Inicio
+               </Button>
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
+  const questions = courses_data[selectedCourse].questions
   const question = questions[currentQuestion]
-  const selectedAnswer = answers[currentQuestion]
+  const isLast = currentQuestion === questions.length - 1
+
+  if (examFinished) {
+    const score = calculateScore()
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f8fafc] p-4">
+        <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-none overflow-hidden animate-in zoom-in duration-500">
+          <div className="bg-secondary p-8 text-center text-white">
+             <CheckCircle2 className="h-16 w-16 mx-auto mb-4" />
+             <h2 className="text-3xl font-black">¡Buen trabajo!</h2>
+          </div>
+          <CardContent className="p-8 text-center space-y-8">
+            <div className="bg-primary/10 rounded-3xl p-8">
+              <p className="text-5xl font-black text-primary">{score} / {questions.length}</p>
+              <p className="font-bold text-secondary mt-2">Respuestas correctas</p>
+            </div>
+            <Button onClick={() => setSelectedCourse(null)} className="w-full h-14 rounded-2xl text-lg font-bold">
+              Escoger otro curso
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      <DashboardSidebar
-        currentView="exam"
-        onNavigate={onNavigate}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-auto">
-        {/* Mobile Header */}
-        <div className="flex items-center gap-4 border-b border-border p-4 lg:hidden">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <h1 className="font-semibold">Simulacro</h1>
-        </div>
-
-        {/* Exam Header Bar */}
-        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-4 py-3 lg:px-8">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-primary" />
-            <span className="font-medium">Simulacro de Matemáticas</span>
+    <div className="min-h-[calc(100vh-5rem)] bg-[#f8fafc] flex flex-col items-center">
+      <div className="w-full max-w-4xl p-4 md:p-12 flex flex-col items-center">
+        <div className="w-full max-w-3xl space-y-8">
+          <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-primary uppercase tracking-widest">Curso: {courses_data[selectedCourse].title}</p>
+              <h2 className="text-xl font-black text-secondary">Pregunta {currentQuestion + 1} de {questions.length}</h2>
+            </div>
+            <Button variant="ghost" onClick={() => setSelectedCourse(null)} className="rounded-xl font-bold">Salir</Button>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Pregunta</span>
-              <span className="font-bold">
-                {currentQuestion + 1} de {questions.length}
-              </span>
-            </div>
-
-            <div
-              className={`flex items-center gap-2 rounded-lg px-3 py-1.5 ${
-                timeRemaining < 300
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
-              <Clock className="h-4 w-4" />
-              <span className="font-mono font-bold">
-                {formatTime(timeRemaining)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Question Content */}
-        <div className="flex flex-1 flex-col p-4 lg:p-8">
-          <Card className="mb-6 flex-1 border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg font-medium leading-relaxed">
-                {question.text}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {question.options.map((option, index) => {
-                  const letter = String.fromCharCode(65 + index) // A, B, C, D
-                  const isSelected = selectedAnswer === index
-
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(index)}
-                      className={`flex items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-secondary/30 hover:border-primary/50 hover:bg-secondary"
-                      }`}
-                    >
-                      <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                          isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-muted-foreground"
-                        }`}
-                      >
-                        {letter}
-                      </div>
-                      <span
-                        className={`font-medium ${
-                          isSelected ? "text-foreground" : "text-muted-foreground"
-                        }`}
-                      >
-                        {option}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Navigation Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentQuestion === 0}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Anterior
-            </Button>
-
-            <div className="flex gap-3">
-              {currentQuestion < questions.length - 1 ? (
-                <Button onClick={handleNext} className="gap-2">
-                  Siguiente
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button onClick={handleFinish} variant="default">
-                  Finalizar Prueba
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Question Navigator */}
-          <div className="mt-6 hidden flex-wrap gap-2 lg:flex">
-            {questions.map((_, index) => {
-              const isAnswered = answers[index] !== undefined
-              const isCurrent = currentQuestion === index
-
-              return (
+          <Card className="rounded-[2.5rem] shadow-xl border-none p-8 md:p-12 animate-in slide-in-from-bottom duration-500">
+            <h3 className="text-2xl md:text-3xl font-bold text-secondary mb-12 text-center">
+              {question.text}
+            </h3>
+            
+            <div className="grid gap-4">
+              {question.options.map((option, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentQuestion(index)}
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                    isCurrent
-                      ? "bg-primary text-primary-foreground"
-                      : isAnswered
-                        ? "bg-chart-2/20 text-chart-2"
-                        : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  onClick={() => handleAnswerSelect(index)}
+                  className={`group flex items-center gap-6 p-6 rounded-2xl border-2 transition-all ${
+                    answers[currentQuestion] === index
+                      ? "border-primary bg-primary text-white scale-[1.02] shadow-lg shadow-primary/20"
+                      : "border-gray-100 bg-gray-50 hover:border-primary/50 hover:bg-white"
                   }`}
                 >
-                  {index + 1}
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-lg ${
+                    answers[currentQuestion] === index ? "bg-white text-primary" : "bg-white text-secondary shadow-sm"
+                  }`}>
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span className="text-lg font-bold">{option}</span>
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+
+            <div className="mt-12 flex justify-end">
+               <Button 
+                onClick={handleNext} 
+                disabled={answers[currentQuestion] === undefined}
+                className="h-14 px-12 rounded-2xl font-black text-lg shadow-lg shadow-primary/30 transition-transform active:scale-95"
+               >
+                 {isLast ? "Finalizar" : "Siguiente"}
+               </Button>
+            </div>
+          </Card>
         </div>
       </div>
-
-      {/* Finish Confirmation Dialog */}
-      <AlertDialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Finalizar simulacro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Has respondido {Object.keys(answers).length} de {questions.length}{" "}
-              preguntas. Una vez finalizado, no podrás cambiar tus respuestas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continuar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmFinish}>
-              Finalizar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
+

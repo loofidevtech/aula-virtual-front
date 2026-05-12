@@ -44,9 +44,8 @@ export function DashboardSidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:sticky lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] w-64 border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:sticky lg:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Mobile Close Button */}
         <button
@@ -60,7 +59,7 @@ export function DashboardSidebar({
         <div className="flex h-20 items-center gap-3 border-b border-sidebar-border px-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5 p-1">
             <Image
-              src="/logo_principal.jpg"
+              src="/logo_principal.png"
               alt="Logo"
               width={48}
               height={48}
@@ -90,11 +89,10 @@ export function DashboardSidebar({
                   onNavigate(item.view)
                   onClose()
                 }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                }`}
+                  }`}
               >
                 <item.icon className="h-5 w-5" />
                 {item.label}
