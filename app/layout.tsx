@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'LoofiDev Academy - Plataforma Educativa Digital',
+  title: 'Albert MATH Academy - Plataforma Educativa Digital',
   description: 'Prepara tu ingreso a la universidad con videoclases, simulacros y material de estudio de alta calidad.',
   generator: 'v0.app',
   icons: {

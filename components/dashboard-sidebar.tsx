@@ -57,12 +57,12 @@ export function DashboardSidebar({
 
         {/* Sidebar Header */}
         <div className="flex h-20 items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/5 p-1">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/5 p-1">
             <Image
               src="/logo_principal.png"
               alt="Logo"
-              width={48}
-              height={48}
+              width={64}
+              height={64}
               className="h-full w-full object-contain"
             />
           </div>

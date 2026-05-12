@@ -270,7 +270,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                  alt="Logo" 
                  width={500} 
                  height={150} 
-                 className="h-40 w-auto drop-shadow-md" 
+                 className="h-56 w-auto drop-shadow-md" 
                />
                <p className="text-muted-foreground text-lg font-medium leading-relaxed max-w-md">
                  Formando los futuros líderes de las mejores universidades del país con tecnología y pasión.

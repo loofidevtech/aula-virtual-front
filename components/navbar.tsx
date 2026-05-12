@@ -48,12 +48,11 @@ export function Navbar({
   ]
 
   return (
-    <header 
-      className={`sticky top-0 z-[100] w-full transition-all duration-500 ${
-        isScrolled 
-          ? "h-36 bg-white/95 backdrop-blur-xl shadow-xl border-b border-secondary/5" 
-          : "h-48 bg-transparent"
-      }`}
+    <header
+      className={`sticky top-0 z-[100] w-full transition-all duration-500 flex items-center ${isScrolled
+        ? "h-20 bg-white/95 backdrop-blur-xl shadow-xl border-b border-secondary/5"
+        : "h-28 bg-transparent"
+        }`}
     >
       <div className="container mx-auto flex h-full items-center justify-between px-4 lg:px-8">
         {/* Logo */}
@@ -66,11 +65,10 @@ export function Navbar({
             alt="LoofiDev Academy Logo"
             width={600}
             height={200}
-            className={`w-auto object-contain transition-all duration-500 ${
-              isScrolled 
-                ? "h-24 md:h-28 lg:h-32" 
-                : "h-32 md:h-40 lg:h-44"
-            }`}
+            className={`h-auto object-contain transition-all duration-500 ${isScrolled
+              ? "w-32 md:w-40 lg:w-48"
+              : "w-48 md:w-64 lg:w-[12rem]"
+              }`}
             priority
           />
         </button>
@@ -81,16 +79,14 @@ export function Navbar({
             <button
               key={item.view}
               onClick={() => onNavigate(item.view)}
-              className={`group relative rounded-2xl px-6 py-3 text-sm font-black uppercase tracking-wider transition-all duration-300 overflow-hidden ${
-                currentView === item.view
-                  ? "text-primary bg-primary/5"
-                  : "text-secondary hover:text-primary"
-              }`}
+              className={`group relative rounded-2xl px-6 py-3 text-sm font-black uppercase tracking-wider transition-all duration-300 overflow-hidden ${currentView === item.view
+                ? "text-primary bg-primary/5"
+                : "text-secondary hover:text-primary"
+                }`}
             >
               <span className="relative z-10">{item.label}</span>
-              <span className={`absolute bottom-0 left-0 h-1 w-full bg-primary transition-all duration-300 ${
-                currentView === item.view ? "opacity-100" : "opacity-0 group-hover:opacity-100 scale-x-0 group-hover:scale-x-100"
-              }`} />
+              <span className={`absolute bottom-0 left-0 h-1 w-full bg-primary transition-all duration-300 ${currentView === item.view ? "opacity-100" : "opacity-0 group-hover:opacity-100 scale-x-0 group-hover:scale-x-100"
+                }`} />
             </button>
           ))}
         </nav>
@@ -105,7 +101,7 @@ export function Navbar({
               >
                 Ingresar
               </button>
-              <Button 
+              <Button
                 onClick={onRegisterClick}
                 className="h-12 rounded-2xl bg-primary px-8 font-black text-white shadow-xl shadow-primary/20 hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all"
               >
