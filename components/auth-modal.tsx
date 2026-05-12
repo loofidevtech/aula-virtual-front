@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { GraduationCap, X } from "lucide-react"
+import { X, Mail, Lock, User as UserIcon, Phone, GraduationCap, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import type { AuthModalType } from "@/app/page"
+import Image from "next/image"
 
 interface AuthModalProps {
   type: AuthModalType
@@ -15,8 +15,6 @@ interface AuthModalProps {
   onSwitchToRegister: () => void
   onSwitchToLogin: () => void
 }
-
-import Image from "next/image"
 
 export function AuthModal({
   type,
@@ -45,193 +43,189 @@ export function AuthModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto">
-      {/* Header Academika Style */}
-      <header className="flex h-16 w-full items-center justify-between bg-secondary px-4 md:px-8 shrink-0">
-        <div className="flex items-center gap-4">
+    <div className="fixed inset-0 z-[1000] flex bg-white overflow-hidden">
+      {/* Background/Visual Side (Hidden on mobile) */}
+      <div className="relative hidden lg:flex lg:w-[55%] xl:w-[60%] flex-col justify-between p-12 bg-[#0F172A] overflow-hidden">
+        {/* Abstract Background Image */}
+        <Image
+          src="/auth_background_premium_1778564456138.png"
+          alt="Auth Background"
+          fill
+          className="object-cover opacity-60 mix-blend-overlay"
+        />
+        
+        <div className="relative z-10">
           <Image
             src="/logo_principal.png"
             alt="Logo"
             width={180}
-            height={45}
+            height={50}
             className="h-10 w-auto brightness-0 invert"
           />
-          <nav className="hidden md:flex gap-6 ml-8">
-            <button onClick={onClose} className="text-sm font-bold text-white uppercase hover:text-primary transition-colors">Inicio</button>
-          </nav>
         </div>
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            className="bg-primary text-white hover:bg-primary/90 rounded-full px-6 font-bold uppercase text-xs"
-            onClick={type === "login" ? onSwitchToRegister : onSwitchToLogin}
-          >
-            {type === "login" ? "Registro" : "Ingresar"}
-          </Button>
-          <button onClick={onClose} className="text-white hover:text-primary">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-      </header>
 
-      {/* Top Info Bar */}
-      <div className="bg-[#f3f4f6] py-2 px-4 md:px-8 flex justify-between items-center text-[10px] md:text-xs text-secondary font-medium">
-        <div className="flex items-center gap-2">
-          <span className="text-primary">📍</span> Lima, Perú
+        <div className="relative z-10 space-y-6 max-w-lg">
+          <h1 className="text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight">
+            Impulsa tu <br />
+            <span className="text-primary italic">potencial</span> académico.
+          </h1>
+          <p className="text-lg text-white/60 font-medium leading-relaxed">
+            Únete a la plataforma de preparación universitaria más avanzada y asegura tu futuro hoy mismo.
+          </p>
+          
+          <div className="flex gap-8 pt-8">
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-white">+500</p>
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest">Alumnos</p>
+            </div>
+            <div className="h-10 w-[1px] bg-white/10" />
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-white">98%</p>
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest">Ingresantes</p>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <span>Facebook</span>
-          <span>Instagram</span>
+
+        <div className="relative z-10 flex items-center gap-4 text-white/30 text-xs font-bold uppercase tracking-widest">
+          <span>Lima, Perú</span>
+          <div className="h-1 w-1 rounded-full bg-white/20" />
+          <span>© 2026 Albert Math Academy</span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Left Side: Info */}
-          <div className="space-y-8 animate-in fade-in slide-in-from-left duration-700">
-            <h1 className="text-3xl md:text-5xl font-extrabold text-secondary leading-tight">
-              {type === "login" 
-                ? "Inicia sesión con tu cuenta de prueba para acceder a la plataforma." 
-                : "Regístrate ahora y únete a nuestra comunidad de pruebas hoy mismo."}
-            </h1>
-            
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary text-white text-[10px]">✓</div>
-                <p className="text-secondary font-medium">Beneficio de prueba número uno</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary text-white text-[10px]">✓</div>
-                <p className="text-secondary font-medium">Acceso a datos de ejemplo ilimitados</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary text-white text-[10px]">✓</div>
-                <p className="text-secondary font-medium">Soporte técnico para usuarios beta</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary text-white text-[10px]">✓</div>
-                <p className="text-secondary font-medium">Actualizaciones de sistema frecuentes</p>
-              </div>
+      {/* Form Side */}
+      <div className="flex-1 flex flex-col relative bg-slate-50 overflow-y-auto">
+        <button 
+          onClick={onClose} 
+          className="absolute right-6 top-6 h-10 w-10 flex items-center justify-center rounded-full bg-white shadow-md text-secondary hover:text-primary transition-all z-20 active:scale-95"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-20">
+          <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-right duration-700">
+            {/* Header for Mobile */}
+            <div className="lg:hidden flex justify-center mb-8">
+              <Image src="/logo_principal.png" alt="Logo" width={140} height={40} className="h-8 w-auto" />
             </div>
 
-            <div className="relative aspect-video w-full overflow-hidden rounded-xl border-4 border-gray-100 shadow-xl">
-               <Image 
-                src="/placeholder.jpg" 
-                alt="Students" 
-                fill 
-                className="object-cover"
-               />
-            </div>
-          </div>
-
-          {/* Right Side: Form Card */}
-          <div className="flex justify-center lg:justify-end animate-in fade-in slide-in-from-right duration-700">
-            <div className="w-full max-w-lg bg-white rounded-[2rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative overflow-hidden">
-              {/* Decorative Circle */}
-              <div className="absolute -right-8 -bottom-8 w-32 h-32 border-[12px] border-primary/5 rounded-full" />
-              
-              <h2 className="text-2xl md:text-3xl font-black text-secondary mb-8 leading-tight">
-                Prepárate gratis para postular a la universidad.
+            <div className="space-y-3">
+              <h2 className="text-3xl md:text-4xl font-bold text-secondary tracking-tight">
+                {type === "login" ? "Bienvenido de nuevo" : "Crea tu cuenta"}
               </h2>
+              <p className="text-secondary/50 font-medium">
+                {type === "login" 
+                  ? "Ingresa tus credenciales para acceder a tu campus virtual." 
+                  : "Regístrate para comenzar tu camino al éxito universitario."}
+              </p>
+            </div>
 
-              <Button 
-                variant="secondary" 
-                className="w-full mb-8 h-14 rounded-2xl bg-secondary text-white font-black text-lg hover:bg-secondary/90 transition-transform active:scale-95"
-                onClick={type === "login" ? onSwitchToLogin : onSwitchToRegister}
-              >
-                {type === "login" ? "Ingresar" : "Crear un cuenta"}
-              </Button>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {type === "register" && (
-                  <>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {type === "register" && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative group">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Nombres*"
-                      className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                      placeholder="Nombres"
+                      className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
                     />
+                  </div>
+                  <div className="relative group">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Apellidos*"
-                      className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                      placeholder="Apellidos"
+                      className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
                     />
-                  </>
-                )}
-                
+                  </div>
+                </div>
+              )}
+
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                 <Input
                   type="email"
-                  placeholder="Correo electrónico*"
-                  className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                  placeholder="Correo electrónico"
+                  className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
+              </div>
 
-                {type === "register" && (
-                  <>
+              {type === "register" && (
+                <>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Celular*"
-                      className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                      placeholder="WhatsApp / Celular"
+                      className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       required
                     />
+                  </div>
+                  <div className="relative group">
+                    <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Nombre del colegio*"
-                      className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                      placeholder="Nombre del colegio"
+                      className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                       value={school}
                       onChange={(e) => setSchool(e.target.value)}
                       required
                     />
-                  </>
-                )}
+                  </div>
+                </>
+              )}
 
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary/30 group-focus-within:text-primary transition-colors" />
                 <Input
                   type="password"
-                  placeholder="Contraseña*"
-                  className="h-12 rounded-2xl bg-[#f9fafb] border-none px-6 focus-visible:ring-primary/20"
+                  placeholder="Contraseña"
+                  className="h-12 pl-12 rounded-2xl bg-white border-transparent shadow-sm focus:border-primary/20 focus:ring-primary/10 transition-all text-sm font-medium"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
-
-                <Button 
-                  type="submit" 
-                  className="w-full h-14 rounded-2xl bg-primary text-white font-black text-lg hover:bg-primary/90 transition-all hover:shadow-lg hover:shadow-primary/30 active:scale-95 mt-4"
-                >
-                  {type === "login" ? "Iniciar sesión" : "Registrarte"}
-                </Button>
-              </form>
-
-              <div className="mt-8 space-y-4 text-center">
-                <p className="text-sm font-medium text-secondary">
-                  {type === "login" ? "¿Aún no tienes una cuenta?" : "¿Ya tienes una cuenta?"} {" "}
-                  <button 
-                    onClick={type === "login" ? onSwitchToRegister : onSwitchToLogin}
-                    className="text-blue-600 font-bold hover:underline"
-                  >
-                    {type === "login" ? "Quiero registrarme" : "Quiero ingresar"}
-                  </button>
-                </p>
-                {type === "login" && (
-                  <p className="text-sm font-medium text-secondary">
-                    Olvidé mi contraseña {" "}
-                    <button className="text-blue-600 font-bold hover:underline">
-                      Quiero recuperar contraseña
-                    </button>
-                  </p>
-                )}
               </div>
+
+              {type === "login" && (
+                <div className="flex justify-end">
+                  <button type="button" className="text-xs font-bold text-primary hover:underline">¿Olvidaste tu contraseña?</button>
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full h-14 rounded-2xl bg-primary text-white font-bold text-base hover:bg-primary/90 transition-all hover:shadow-xl hover:shadow-primary/20 active:scale-95 group"
+              >
+                {type === "login" ? "Iniciar Sesión" : "Crear mi cuenta"}
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </form>
+
+            <div className="pt-8 border-t border-secondary/5 flex flex-col items-center gap-4">
+              <p className="text-sm font-medium text-secondary/40">
+                {type === "login" ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"}
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={type === "login" ? onSwitchToRegister : onSwitchToLogin}
+                className="w-full h-12 rounded-2xl border-2 border-secondary/5 bg-white text-secondary font-bold text-sm hover:bg-secondary hover:text-white transition-all active:scale-95"
+              >
+                {type === "login" ? "Regístrate ahora" : "Ingresa con tu cuenta"}
+              </Button>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 }
-

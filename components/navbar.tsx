@@ -50,8 +50,8 @@ export function Navbar({
   return (
     <header
       className={`sticky top-0 z-[100] w-full transition-all duration-500 flex items-center ${isScrolled
-        ? "h-20 bg-white/95 backdrop-blur-xl shadow-xl border-b border-secondary/5"
-        : "h-28 bg-transparent"
+        ? "h-16 bg-white/95 backdrop-blur-xl shadow-lg border-b border-secondary/5"
+        : "h-20 bg-transparent"
         }`}
     >
       <div className="container mx-auto flex h-full items-center justify-between px-4 lg:px-8">
@@ -66,8 +66,8 @@ export function Navbar({
             width={600}
             height={200}
             className={`h-auto object-contain transition-all duration-500 ${isScrolled
-              ? "w-32 md:w-40 lg:w-48"
-              : "w-48 md:w-64 lg:w-[12rem]"
+              ? "w-28 md:w-32 lg:w-36"
+              : "w-36 md:w-44 lg:w-52"
               }`}
             priority
           />

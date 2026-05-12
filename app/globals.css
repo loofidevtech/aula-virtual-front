@@ -30,13 +30,13 @@
   --chart-4: #FAD000;
   --chart-5: #334155;
   --radius: 1.25rem;
-  --sidebar: #1E293B;
+  --sidebar: #0F172A; /* Deep Navy */
   --sidebar-foreground: #F8FAFC;
   --sidebar-primary: #D95C14;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #5A9BD4;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #334155;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
+  --sidebar-accent-foreground: #5A9BD4;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
   --sidebar-ring: #FAD000;
 }
 
