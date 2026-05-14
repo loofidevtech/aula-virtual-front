@@ -4,40 +4,50 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Albert Math Academy - Exact Palette */
-  --background: #FFFFFF;
-  --foreground: #1A1A1A;
-  --card: #FFFFFF;
-  --card-foreground: #1A1A1A;
-  --popover: #FFFFFF;
-  --popover-foreground: #1A1A1A;
-  --primary: #D95C14; /* Naranja Terracota */
-  --primary-foreground: #FFFFFF;
-  --secondary: #5A9BD4; /* Azul Celeste */
-  --secondary-foreground: #FFFFFF;
-  --muted: #F8FAFC;
-  --muted-foreground: #64748B;
-  --accent: #8EBA21; /* Verde Lima */
-  --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --destructive-foreground: #FFFFFF;
-  --border: #E2E8F0;
-  --input: #F1F5F9;
-  --ring: #FAD000; /* Amarillo Sol */
-  --chart-1: #D95C14;
-  --chart-2: #5A9BD4;
-  --chart-3: #8EBA21;
-  --chart-4: #FAD000;
-  --chart-5: #334155;
+  /* Albert Math Academy - Night Blue Palette */
+  --background: #040d21; /* Azul Noche profundo */
+  --foreground: #f8fafc; /* Texto claro */
+  --card: #0b1736; /* Azul Noche elevado */
+  --card-foreground: #f8fafc;
+  --popover: #0b1736;
+  --popover-foreground: #f8fafc;
+  --primary: #f07629; /* Naranja Terracota Brillante */
+  --primary-foreground: #ffffff;
+  --secondary: #1e3a8a; /* Azul Marino (Blue 900) para fondos secundarios */
+  --secondary-foreground: #ffffff;
+  --muted: #0f214a; /* Azul Noche suave */
+  --muted-foreground: #94a3b8; /* Texto secundario (Slate 400) */
+  --accent: #38bdf8; /* Azul Celeste Brillante (Sky 400) */
+  --accent-foreground: #040d21;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #1e3a8a;
+  --input: #0f214a;
+  --ring: #38bdf8;
+  --chart-1: #f07629;
+  --chart-2: #38bdf8;
+  --chart-3: #a3e635;
+  --chart-4: #fde047;
+  --chart-5: #94a3b8;
   --radius: 1.25rem;
-  --sidebar: #1E293B;
-  --sidebar-foreground: #F8FAFC;
-  --sidebar-primary: #D95C14;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #5A9BD4;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #334155;
-  --sidebar-ring: #FAD000;
+  --sidebar: #040d21;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #f07629;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0f214a;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e3a8a;
+  --sidebar-ring: #38bdf8;
+
+  /* Practice Module Variables */
+  --practice-bg: #040d21;
+  --practice-card-bg: #0b1736;
+  --practice-card-border: #1e3a8a;
+  --practice-text-title: #f8fafc;
+  --practice-text-body: #94a3b8;
+  --practice-option-bg: #0f214a;
+  --practice-option-border: #1e3a8a;
+  --practice-option-hover: #1e3a8a;
 }
 
 @theme inline {
@@ -86,7 +96,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-primary/30;
+  }
+  
+  /* Smooth transitions for interactive elements (UX/UI best practice) */
+  a, button, input, select, textarea, [role="button"], .card-hover, [data-sidebar="menu-button"] {
+    @apply transition-all duration-300 ease-in-out;
   }
 }
 
@@ -98,4 +113,3 @@
 .animate-infinite-scroll {
   animation: infinite-scroll 40s linear infinite;
 }
-

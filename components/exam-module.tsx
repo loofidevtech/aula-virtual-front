@@ -119,7 +119,7 @@ export function ExamModule({
 
   if (!selectedCourse) {
     return (
-      <div className="min-h-[calc(100vh-5rem)] bg-[#f8fafc] flex flex-col relative overflow-hidden">
+      <div className="min-h-[calc(100vh-5rem)] bg-[var(--practice-bg)] flex flex-col relative overflow-hidden">
         {/* Background Decorative Blobs */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/5 rounded-full blur-3xl -z-10 animate-pulse delay-1000" />
@@ -130,10 +130,10 @@ export function ExamModule({
               <div className="inline-block px-6 py-2 bg-primary/10 rounded-full border border-primary/20 text-primary font-black text-sm uppercase tracking-widest animate-in fade-in slide-in-from-bottom duration-700">
                 Módulo de Autoevaluación
               </div>
-              <h1 className="text-5xl md:text-8xl font-black text-secondary tracking-tighter animate-in fade-in slide-in-from-top duration-700">
+              <h1 className="text-5xl md:text-8xl font-black text-[var(--practice-text-title)] tracking-tighter animate-in fade-in slide-in-from-top duration-700">
                 Practica con <span className="text-primary italic">Albert</span>
               </h1>
-              <p className="text-muted-foreground text-2xl font-medium max-w-2xl mx-auto">Pon a prueba tus conocimientos con ejercicios reales diseñados para tu éxito académico.</p>
+              <p className="text-[var(--practice-text-body)] text-2xl font-medium max-w-2xl mx-auto">Pon a prueba tus conocimientos con ejercicios reales diseñados para tu éxito académico.</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-10">
@@ -144,7 +144,7 @@ export function ExamModule({
                   style={{ animationDelay: `${index * 200}ms` }}
                   onClick={() => handleCourseSelect(id)}
                 >
-                  <div className="relative h-full w-full rounded-[3rem] bg-white p-2 shadow-xl transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateX(10deg)_rotateY(-10deg)] group-hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.2)] cursor-pointer overflow-hidden border-2 border-transparent hover:border-primary/20">
+                  <div className="relative h-full w-full rounded-[3rem] bg-[var(--practice-card-bg)] p-2 shadow-xl transition-all duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateX(10deg)_rotateY(-10deg)] group-hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] cursor-pointer overflow-hidden border-2 border-[var(--practice-card-border)] hover:border-primary/50">
                     {/* Gradient Header */}
                     <div className={`h-1/2 w-full rounded-[2.5rem] bg-gradient-to-br ${data.color} flex flex-col items-center justify-center p-8 text-white relative overflow-hidden`}>
                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)] [background-size:20px_20px]" />
@@ -155,7 +155,7 @@ export function ExamModule({
                     </div>
 
                     <div className="h-1/2 w-full p-10 flex flex-col justify-between items-center text-center">
-                       <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                       <p className="text-[var(--practice-text-body)] text-lg font-medium leading-relaxed">
                          {data.description}
                        </p>
                        
@@ -178,7 +178,7 @@ export function ExamModule({
                <Button 
                 variant="ghost" 
                 onClick={() => onNavigate("landing")}
-                className="group flex items-center gap-3 text-xl font-black text-secondary hover:text-primary transition-all"
+                className="group flex items-center gap-3 text-xl font-black text-[var(--practice-text-title)] hover:text-primary transition-all"
                >
                  <ArrowLeft className="h-6 w-6 group-hover:-translate-x-2 transition-transform" />
                  Volver al Inicio
@@ -197,8 +197,8 @@ export function ExamModule({
   if (examFinished) {
     const score = calculateScore()
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[#f8fafc] p-4">
-        <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl border-none overflow-hidden animate-in zoom-in duration-500">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-[var(--practice-bg)] p-4">
+        <Card className="w-full max-w-md rounded-[2.5rem] shadow-2xl bg-[var(--practice-card-bg)] border border-[var(--practice-card-border)] overflow-hidden animate-in zoom-in duration-500">
           <div className="bg-secondary p-8 text-center text-white">
              <CheckCircle2 className="h-16 w-16 mx-auto mb-4" />
              <h2 className="text-3xl font-black">¡Buen trabajo!</h2>
@@ -206,7 +206,7 @@ export function ExamModule({
           <CardContent className="p-8 text-center space-y-8">
             <div className="bg-primary/10 rounded-3xl p-8">
               <p className="text-5xl font-black text-primary">{score} / {questions.length}</p>
-              <p className="font-bold text-secondary mt-2">Respuestas correctas</p>
+              <p className="font-bold text-[var(--practice-text-title)] mt-2">Respuestas correctas</p>
             </div>
             <Button onClick={() => setSelectedCourse(null)} className="w-full h-14 rounded-2xl text-lg font-bold">
               Escoger otro curso
@@ -218,19 +218,19 @@ export function ExamModule({
   }
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-[#f8fafc] flex flex-col items-center">
+    <div className="min-h-[calc(100vh-5rem)] bg-[var(--practice-bg)] flex flex-col items-center">
       <div className="w-full max-w-4xl p-4 md:p-12 flex flex-col items-center">
         <div className="w-full max-w-3xl space-y-8">
-          <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center bg-[var(--practice-card-bg)] p-6 rounded-3xl shadow-sm border border-[var(--practice-card-border)]">
             <div className="space-y-1">
               <p className="text-xs font-bold text-primary uppercase tracking-widest">Curso: {courses_data[selectedCourse].title}</p>
-              <h2 className="text-xl font-black text-secondary">Pregunta {currentQuestion + 1} de {questions.length}</h2>
+              <h2 className="text-xl font-black text-[var(--practice-text-title)]">Pregunta {currentQuestion + 1} de {questions.length}</h2>
             </div>
             <Button variant="ghost" onClick={() => setSelectedCourse(null)} className="rounded-xl font-bold">Salir</Button>
           </div>
 
-          <Card className="rounded-[2.5rem] shadow-xl border-none p-8 md:p-12 animate-in slide-in-from-bottom duration-500">
-            <h3 className="text-2xl md:text-3xl font-bold text-secondary mb-12 text-center">
+          <Card className="rounded-[2.5rem] bg-[var(--practice-card-bg)] shadow-xl border border-[var(--practice-card-border)] p-8 md:p-12 animate-in slide-in-from-bottom duration-500">
+            <h3 className="text-2xl md:text-3xl font-bold text-[var(--practice-text-title)] mb-12 text-center">
               {question.text}
             </h3>
             
@@ -242,11 +242,11 @@ export function ExamModule({
                   className={`group flex items-center gap-6 p-6 rounded-2xl border-2 transition-all ${
                     answers[currentQuestion] === index
                       ? "border-primary bg-primary text-white scale-[1.02] shadow-lg shadow-primary/20"
-                      : "border-gray-100 bg-gray-50 hover:border-primary/50 hover:bg-white"
+                      : "border-[var(--practice-option-border)] bg-[var(--practice-option-bg)] text-[var(--practice-text-title)] hover:border-primary/50 hover:bg-[var(--practice-option-hover)]"
                   }`}
                 >
                   <span className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-lg ${
-                    answers[currentQuestion] === index ? "bg-white text-primary" : "bg-white text-secondary shadow-sm"
+                    answers[currentQuestion] === index ? "bg-white text-primary" : "bg-[var(--practice-card-bg)] text-[var(--practice-text-title)] shadow-sm border border-[var(--practice-card-border)]"
                   }`}>
                     {String.fromCharCode(65 + index)}
                   </span>
