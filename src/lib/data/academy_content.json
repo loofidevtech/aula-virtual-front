@@ -1,0 +1,179 @@
+{
+  "categories": [
+    {
+      "id": "programas_entrenamiento",
+      "title": "Programas de Entrenamiento Olímpico",
+      "description": "Programas de preparación intensiva para competencias nacionales e internacionales.",
+      "items": [
+        {
+          "id": "amc",
+          "title": "AMERICAN MATHEMATICS COMPETITION (AMC)",
+          "slug": "american-mathematics-competition",
+          "logo": "/assets/logos/programas/american_mathematics_competition.png",
+          "banner": "/assets/banners/programas/american_mathematics_competition.png"
+        },
+        {
+          "id": "canguro",
+          "title": "CANGURO MATEMÁTICO",
+          "slug": "canguro-matematico",
+          "logo": "/assets/logos/programas/canguro_matematico.png",
+          "banner": "/assets/banners/programas/canguro_matematico.png"
+        },
+        {
+          "id": "conamat",
+          "title": "CONAMAT",
+          "slug": "conamat",
+          "logo": "/assets/logos/programas/conamat.png",
+          "banner": "/assets/banners/programas/conamat-general.png"
+        },
+        {
+          "id": "matematica_binaria",
+          "title": "CONCURSO MATEMÁTICA BINARIA",
+          "slug": "concurso-matematica-binaria",
+          "logo": "/assets/logos/programas/concurso_matematica_binaria.png",
+          "banner": "/assets/banners/programas/concurso_matematica_binaria-general.png"
+        },
+        {
+          "id": "conemate",
+          "title": "CONEMATE",
+          "slug": "conemate",
+          "logo": "/assets/logos/programas/conemate.png",
+          "banner": "/assets/banners/programas/conemate-general.png"
+        },
+        {
+          "id": "juegos_logicos",
+          "title": "JUEGOS LÓGICOS Y MATEMÁTICOS",
+          "slug": "juegos-logicos-matematicos",
+          "logo": "/assets/logos/programas/juegos_logicos_y_matematicos.png",
+          "banner": "/assets/banners/programas/juegos_logicos_y_matematicos.png"
+        },
+        {
+          "id": "onem",
+          "title": "ONEM (Olimpiada Nacional Escolar de Matemática)",
+          "slug": "onem",
+          "logo": "/assets/logos/programas/onem.png",
+          "banner": "/assets/banners/programas/onem-general.jpeg"
+        }
+      ]
+    },
+    {
+      "id": "solucionarios_olimpiadas",
+      "title": "Solucionarios de Olimpiadas Matemáticas",
+      "description": "Recursos detallados de resolución para las competencias más importantes.",
+      "items": [
+        {
+          "id": "competencia_paralela",
+          "title": "Competencia Paralela",
+          "slug": "competencia-paralela",
+          "logo": "/assets/logos/solucionarios/competencia_paralela.png",
+          "banner": "/assets/banners/solucionarios/competencia_paralela.png"
+        },
+        {
+          "id": "concurso_binacional",
+          "title": "Concurso Binacional",
+          "slug": "concurso-binacional",
+          "logo": "/assets/logos/solucionarios/concurso_binacional.png",
+          "banner": "/assets/banners/solucionarios/concurso_binacional.png"
+        },
+        {
+          "id": "copernicus_math",
+          "title": "Copernicus Math",
+          "slug": "copernicus-math",
+          "logo": "/assets/logos/solucionarios/concurso_copernicus_math.png",
+          "banner": "/assets/banners/solucionarios/concurso_copernicus_math.png"
+        },
+        {
+          "id": "descubrimiento_matematico",
+          "title": "Descubrimiento Matemático",
+          "slug": "descubrimiento-matematico",
+          "logo": "/assets/logos/solucionarios/concurso_descubrimiento_matematico.png",
+          "banner": "/assets/banners/solucionarios/concurso_descubrimiento_matematico.png"
+        },
+        {
+          "id": "spirit_of_math",
+          "title": "Spirit of Math",
+          "slug": "spirit-of-math",
+          "logo": "/assets/logos/solucionarios/concurso_internacional_spirit_of_math.png",
+          "banner": "/assets/banners/solucionarios/concurso_internacional_spirit_of_math.png"
+        },
+        {
+          "id": "selectivo_onem",
+          "title": "Selectivo ONEM",
+          "slug": "selectivo-onem",
+          "logo": "/assets/logos/solucionarios/concurso_selectivo_onem.png",
+          "banner": "/assets/banners/solucionarios/concurso_selectivo_onem.png"
+        },
+        {
+          "id": "geometria_origuela",
+          "title": "Olimpiada de Geometría (Julio Origuela)",
+          "slug": "olimpiada-geometria-julio-origuela",
+          "logo": "/assets/logos/solucionarios/olimpiada_de_geometria_julio_origuela.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_de_geometria_julio_origuela.png"
+        },
+        {
+          "id": "olimpiada_andes",
+          "title": "Olimpiada de los Andes",
+          "slug": "olimpiada-de-los-andes",
+          "logo": "/assets/logos/solucionarios/olimpiada_de_los_andes.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_de_los_andes.png"
+        },
+        {
+          "id": "olimpiada_mayo",
+          "title": "Olimpiada de Mayo",
+          "slug": "olimpiada-de-mayo",
+          "logo": "/assets/logos/solucionarios/olimpiada_de_mayo.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_de_mayo.png"
+        },
+        {
+          "id": "olimpiada_imc",
+          "title": "Olimpiada IMC",
+          "slug": "olimpiada-imc",
+          "logo": "/assets/logos/solucionarios/olimpiada_imc_de_matematicas.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_imc_de_matematicas.png"
+        },
+        {
+          "id": "irani_combinatoria",
+          "title": "Olimpiada Iraní de Combinatoria",
+          "slug": "olimpiada-irani-combinatoria",
+          "logo": "/assets/logos/solucionarios/olimpiada_irani_de_combinatoria.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_irani_de_combinatoria.png"
+        },
+        {
+          "id": "irani_geometria",
+          "title": "Olimpiada Iraní de Geometría",
+          "slug": "olimpiada-irani-geometria",
+          "logo": "/assets/logos/solucionarios/olimpiada_irani_de_geometria.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_irani_de_geometria.png"
+        },
+        {
+          "id": "olimpiada_logical",
+          "title": "Olimpiada Logical",
+          "slug": "olimpiada-logical",
+          "logo": "/assets/logos/solucionarios/olimpiada_logical.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_logical.png"
+        },
+        {
+          "id": "olimpiada_navidena",
+          "title": "Olimpiada Navideña",
+          "slug": "olimpiada-navidena",
+          "logo": "/assets/logos/solucionarios/olimpiada_navidena.png",
+          "banner": "/assets/banners/solucionarios/olimpiada_navidena.png"
+        },
+        {
+          "id": "torneo_ciudades",
+          "title": "Torneo de Ciudades",
+          "slug": "torneo-ciudades",
+          "logo": "/assets/logos/solucionarios/torneo_de_ciudades.png",
+          "banner": "/assets/banners/solucionarios/torneo_de_ciudades.png"
+        },
+        {
+          "id": "torneo_jovenes_matematicos",
+          "title": "Torneo Internacional de Jóvenes Matemáticos",
+          "slug": "torneo-jovenes-matematicos",
+          "logo": "/assets/logos/solucionarios/torneo_internacional_de_jovenes_matematicos.png",
+          "banner": "/assets/banners/solucionarios/torneo_internacional_de_jovenes_matematicos-general.png"
+        }
+      ]
+    }
+  ]
+}

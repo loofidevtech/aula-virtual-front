@@ -1,0 +1,83 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Navbar } from "@/components/navbar"
+import { AuthModal } from "@/components/auth-modal"
+import type { User as UserType } from "@/app/page"
+
+import { supabase } from "@/lib/supabase"
+
+export default function RegistroPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  const handleRegister = async (data: any) => {
+    setLoading(true)
+    try {
+      // 1. Registrar en Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.name,
+          }
+        }
+      })
+
+      if (authError) throw authError
+
+      if (authData.user) {
+        // 2. Guardar datos adicionales en la tabla 'usuarios'
+        const { error: dbError } = await supabase.from('usuarios').insert([
+          {
+            id: authData.user.id,
+            full_name: data.name,
+            email: data.email,
+            telefono: data.phone,
+            colegio: data.school,
+            tipo_colegio: data.schoolType,
+            grado: data.grade,
+            departamento: data.department,
+            distrito: data.district,
+            rol: 'ESTUDIANTE'
+          }
+        ])
+
+        if (dbError) throw dbError
+        
+        alert("¡Registro exitoso! Por favor revisa tu correo para confirmar tu cuenta.")
+        router.push("/dashboard")
+      }
+    } catch (error: any) {
+      alert(error.message || "Error al registrarse")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = () => {
+    router.push("/")
+  }
+
+  return (
+    <div className="bg-background">
+      <Navbar
+        isLoggedIn={false}
+        user={null}
+        onLogout={handleLogout}
+      />
+      <main>
+        <AuthModal
+          type="register"
+          onClose={() => router.push("/")}
+          onLogin={() => {}}
+          onRegister={handleRegister}
+          onSwitchToRegister={() => router.push("/registro")}
+          onSwitchToLogin={() => router.push("/login")}
+        />
+      </main>
+    </div>
+  )
+}
