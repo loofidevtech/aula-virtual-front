@@ -27,9 +27,9 @@ interface NavItem {
 
 const mainNav: NavItem[] = [
   { label: "Inicio", href: "/dashboard", icon: <Home className="h-5 w-5" /> },
-  { label: "Cursos", href: "/dashboard/cursos", icon: <BookOpen className="h-5 w-5" /> },
-  { label: "Mi progreso", href: "/dashboard/progreso", icon: <TrendingUp className="h-5 w-5" /> },
+  { label: "Programas", href: "/dashboard/cursos", icon: <BookOpen className="h-5 w-5" /> },
   { label: "Solucionarios", href: "/dashboard/solucionarios", icon: <FileText className="h-5 w-5" /> },
+  { label: "Mi progreso", href: "/dashboard/progreso", icon: <TrendingUp className="h-5 w-5" /> },
   { label: "Retos", href: "/dashboard/retos", icon: <Swords className="h-5 w-5" /> },
   { label: "Comunidad", href: "/dashboard/comunidad", icon: <Users className="h-5 w-5" /> },
 ]

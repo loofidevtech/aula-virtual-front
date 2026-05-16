@@ -11,9 +11,11 @@ import { supabase } from "@/lib/supabase"
 export default function LoginPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleLogin = async (email: string, password: string) => {
     setLoading(true)
+    setError(null)
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,8 +25,8 @@ export default function LoginPage() {
       if (error) throw error
 
       router.push("/dashboard")
-    } catch (error: any) {
-      alert(error.message || "Error al iniciar sesión")
+    } catch (err: any) {
+      setError(err.message || "Error al iniciar sesión")
     } finally {
       setLoading(false)
     }
@@ -49,6 +51,7 @@ export default function LoginPage() {
           onRegister={() => {}}
           onSwitchToRegister={() => router.push("/registro")}
           onSwitchToLogin={() => router.push("/login")}
+          externalError={error}
         />
       </main>
     </div>

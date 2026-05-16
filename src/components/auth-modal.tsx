@@ -14,6 +14,7 @@ interface AuthModalProps {
   onRegister: (data: any) => void
   onSwitchToRegister: () => void
   onSwitchToLogin: () => void
+  externalError?: string | null
 }
 
 import Image from "next/image"
@@ -25,6 +26,7 @@ export function AuthModal({
   onRegister,
   onSwitchToRegister,
   onSwitchToLogin,
+  externalError,
 }: AuthModalProps) {
   const [name, setName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -176,7 +178,7 @@ export function AuthModal({
                     type="email"
                     placeholder="Correo electrónico*"
                     className={`h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all ${
-                      isEmailInvalid ? "ring-2 ring-destructive/50" : ""
+                      isEmailInvalid || (type === "login" && externalError) ? "ring-2 ring-destructive/50" : ""
                     }`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -238,6 +240,10 @@ export function AuthModal({
                       required
                     >
                       <option value="" disabled>Seleccione el grado*</option>
+                      <option value="3pri">3ero Primaria</option>
+                      <option value="4pri">4to Primaria</option>
+                      <option value="5pri">5to Primaria</option>
+                      <option value="6pri">6to Primaria</option>
                       <option value="1sec">1ro Secundaria</option>
                       <option value="2sec">2do Secundaria</option>
                       <option value="3sec">3ro Secundaria</option>
@@ -274,15 +280,17 @@ export function AuthModal({
                 <Input
                   type="password"
                   placeholder="Contraseña*"
-                  className="h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+                  className={`h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground transition-all ${
+                    (type === "login" && externalError) ? "ring-2 ring-destructive/50" : ""
+                  }`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
 
-                {error && (
+                {(error || externalError) && (
                   <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-2xl text-destructive text-sm font-bold text-center animate-in fade-in zoom-in duration-300">
-                    {error}
+                    {error || (externalError === "Invalid login credentials" ? "Correo o contraseña incorrectos" : externalError)}
                   </div>
                 )}
 

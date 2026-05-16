@@ -1,0 +1,203 @@
+{
+  "programas": [
+    {
+      "id": "amc",
+      "title": "American Mathematics Competition (AMC)",
+      "logos": ["/assets/logos/programas/american_mathematics_competition.png"],
+      "banners": [
+        "/assets/banners/programas/american_mathematics_competition.png"
+      ],
+      "accentColor": "#1E40AF"
+    },
+    {
+      "id": "canguro_matematico",
+      "title": "Canguro Matemático",
+      "logos": ["/assets/logos/programas/canguro_matematico.png"],
+      "banners": ["/assets/banners/programas/canguro_matematico.png"],
+      "type": "Nacional/Internacional",
+      "accentColor": "#EA580C"
+    },
+    {
+      "id": "conamat",
+      "title": "CONAMAT - Concurso Nacional de Matemática",
+      "logos": ["/assets/logos/programas/conamat.png"],
+      "banners": ["/assets/banners/programas/conamat_general.png"],
+      "type": "Nacional",
+      "accentColor": "#DC2626"
+    },
+    {
+      "id": "concurso_matematica_binaria",
+      "title": "Concurso Nacional de Matemática Binaria",
+      "logos": ["/assets/logos/programas/concurso_matematica_binaria.png"],
+      "banners": [
+        "/assets/banners/programas/concurso_matematica_binaria-general.png"
+      ],
+      "type": "Nacional",
+      "accentColor": "#059669"
+    },
+    {
+      "id": "conemate",
+      "title": "CONEMATE - Concurso Nacional de Matemática Escolar",
+      "logos": ["/assets/logos/programas/conemate.png"],
+      "banners": ["/assets/banners/programas/conemate_general.png"],
+      "type": "Nacional",
+      "accentColor": "#0D9488"
+    },
+    {
+      "id": "juegos_logicos",
+      "title": "Juegos Lógicos y Matemáticos",
+      "logos": ["/assets/logos/programas/juegos_logicos_y_matematicos.png"],
+      "banners": ["/assets/banners/programas/juegos_logicos_y_matematicos.png"],
+      "type": "Especial",
+      "accentColor": "#F07629"
+    },
+    {
+      "id": "onem",
+      "title": "ONEM - Olimpiada Nacional Escolar de Matemática",
+      "logos": ["/assets/logos/programas/onem.png"],
+      "banners": ["/assets/banners/programas/onem_general.jpeg"],
+      "type": "Minedu",
+      "accentColor": "#2563EB"
+    }
+  ],
+  "solucionarios": [
+    {
+      "id": "olimpiada_logical",
+      "title": "Olimpiada Matemática de Logical",
+      "logos": ["/assets/logos/solucionarios/olimpiada_logical.png"],
+      "banners": ["/assets/banners/solucionarios/olimpiada_logical.png"],
+      "accentColor": "#2563EB"
+    },
+    {
+      "id": "competencia_paralela",
+      "title": "Competencia Paralela de Matemática",
+      "logos": ["/assets/logos/solucionarios/competencia_paralela.png"],
+      "banners": ["/assets/banners/solucionarios/competencia_paralela.png"],
+      "accentColor": "#8CC63F"
+    },
+    {
+      "id": "concurso_binacional",
+      "title": "Concurso Binacional de Matemáticas",
+      "logos": ["/assets/logos/solucionarios/concurso_binacional.png"],
+      "banners": ["/assets/banners/solucionarios/concurso_binacional.png"],
+      "accentColor": "#5C2D1B"
+    },
+    {
+      "id": "copernicus_math",
+      "title": "Concurso Copernicus Math",
+      "logos": ["/assets/logos/solucionarios/concurso_copernicus_math.png"],
+      "banners": ["/assets/banners/solucionarios/concurso_copernicus_math.png"],
+      "accentColor": "#F7941D"
+    },
+    {
+      "id": "descubrimiento_matematico",
+      "title": "Concurso Descubrimiento Matemático",
+      "logos": [
+        "/assets/logos/solucionarios/concurso_descubrimiento_matematico.png"
+      ],
+      "banners": [
+        "/assets/banners/solucionarios/descubrimiento_matematico.png"
+      ],
+      "accentColor": "#A9D0F5"
+    },
+    {
+      "id": "spirit_of_math",
+      "title": "Concurso Internacional Spirit of Math",
+      "logos": [
+        "/assets/logos/solucionarios/concurso_internacional_spirit_of_math.png"
+      ],
+      "banners": [
+        "/assets/banners/solucionarios/concurso_internacional_spirit_of_math.png"
+      ],
+      "accentColor": "#C51162"
+    },
+    {
+      "id": "selectivo_onem",
+      "title": "Concurso Selectivo ONEM",
+      "logos": ["/assets/logos/solucionarios/concurso_selectivo_onem.png"],
+      "banners": ["/assets/banners/solucionarios/concurso_selectivo_onem.png"],
+      "accentColor": "#E91E63"
+    },
+    {
+      "id": "geometria_origuela",
+      "title": "Olimpiada de Geometría Julio Orihuela",
+      "logos": [
+        "/assets/logos/solucionarios/olimpiada_de_geometria_julio_origuela.png"
+      ],
+      "banners": [
+        "/assets/banners/solucionarios/olimpiada_de_geometria_julio_origuela.png"
+      ],
+      "accentColor": "#002366"
+    },
+    {
+      "id": "olimpiada_andes",
+      "title": "Olimpiada de los Andes",
+      "logos": ["/assets/logos/solucionarios/olimpiada_de_los_andes.png"],
+      "banners": ["/assets/banners/solucionarios/olimpiada_de_los_andes.png"],
+      "accentColor": "#D84315"
+    },
+    {
+      "id": "olimpiada_mayo",
+      "title": "Olimpiada de Mayo",
+      "logos": ["/assets/logos/solucionarios/olimpiada_de_mayo.png"],
+      "banners": ["/assets/banners/solucionarios/olimpiada_de_mayo.png"],
+      "accentColor": "#D4EE91"
+    },
+    {
+      "id": "olimpiada_imc_de_matematicas",
+      "title": "Olimpiada IMC de Matemáticas",
+      "logos": ["/assets/logos/solucionarios/olimpiada_imc_de_matematicas.png"],
+      "banners": [
+        "/assets/banners/solucionarios/olimpiada_imc_de_matematicas.png"
+      ],
+      "accentColor": "#ED1C24"
+    },
+
+    {
+      "id": "irani_combinatoria",
+      "title": "Olimpiada Iraní de Combinatoria",
+      "logos": [
+        "/assets/logos/solucionarios/olimpiada_irani_de_combinatoria.png"
+      ],
+      "banners": [
+        "/assets/banners/solucionarios/olimpiada_irani_de_combinatoria.png"
+      ],
+      "accentColor": "#5D3FD3"
+    },
+    {
+      "id": "irani_geometria",
+      "title": "Olimpiada Iraní de Geometría",
+      "logos": ["/assets/logos/solucionarios/olimpiada_irani_de_geometria.png"],
+      "banners": [
+        "/assets/banners/solucionarios/olimpiada_irani_de_geometria.png"
+      ],
+      "accentColor": "#9C27B0"
+    },
+    {
+      "id": "olimpiada_navidena",
+      "title": "Olimpiada Navideña",
+      "logos": ["/assets/logos/solucionarios/olimpiada_navidena.png"],
+      "banners": ["/assets/banners/solucionarios/olimpiada_navidena.png"],
+      "accentColor": "#B91C1C"
+    },
+    {
+      "id": "torneo_ciudades",
+      "title": "Torneo de Ciudades",
+      "logos": ["/assets/logos/solucionarios/torneo_de_ciudades.png"],
+      "banners": ["/assets/banners/solucionarios/torneo_de_ciudades.png"],
+      "accentColor": "#82C8E6"
+    },
+    {
+      "id": "torneo_jovenes_matematicos",
+      "title": "Torneo Internacional de Jóvenes Matemáticos",
+      "logos": [
+        "/assets/logos/solucionarios/torneo_internacional_de_jovenes_matematicos.png"
+      ],
+      "banners": [
+        "/assets/banners/solucionarios/torneo_internacional_de_jovenes_matematicos_especifico.png",
+        "/assets/banners/solucionarios/torneo_internacional_de_jovenes_matematicos_general.png"
+      ],
+      "accentColor": "#FFED00"
+    }
+  ]
+}
