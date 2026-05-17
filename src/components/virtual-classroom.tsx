@@ -29,7 +29,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import type { View, Course, Lesson, Module, User } from "@/app/page"
+import type { View, Course as BaseCourse, User } from "@/app/page"
+
+interface Lesson {
+  id: string
+  title: string
+  duration: string
+  completed: boolean
+}
+
+export interface Module {
+  id: string
+  title: string
+  lessons: Lesson[]
+}
+
+export interface Course extends BaseCourse {
+  modules?: Module[]
+}
 
 interface VirtualClassroomProps {
   course: Course
@@ -42,13 +59,6 @@ interface VirtualClassroomProps {
   watchedVideos: string[]
   onVideoWatch: (videoId: string) => void
   userRole: "student" | "admin"
-}
-
-interface Lesson {
-  id: string
-  title: string
-  duration: string
-  completed: boolean
 }
 
 interface Material {
