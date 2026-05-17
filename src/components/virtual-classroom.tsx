@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   ArrowLeft,
   CheckCircle2,
@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LockModal } from "@/components/lock-modal"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { adminService } from "@/lib/admin-service"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +85,14 @@ export function VirtualClassroom({
     course.modules?.[0]?.lessons?.[0]?.id || null
   )
   const [isLockModalOpen, setIsLockModalOpen] = useState(false)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+
+  // Fetch subscription status
+  useEffect(() => {
+    if (user?.email && course?.id) {
+      adminService.isUserSubscribed(user.email, course.id).then(setIsSubscribed)
+    }
+  }, [user?.email, course?.id])
 
   // Flatten lessons from modules or use course.lessons placeholder
   const allLessons: Lesson[] = course.modules 
@@ -94,8 +103,9 @@ export function VirtualClassroom({
 
   const isVideoLocked = (lessonId: string) => {
     if (userRole === "admin") return false
+    if (isSubscribed) return false // Premium unlock
     if (watchedVideos.includes(lessonId)) return false
-    return watchedVideos.length >= 3
+    return watchedVideos.length >= 3 // Free tier limits to 3 videos
   }
 
   const handleLessonClick = (lessonId: string) => {
