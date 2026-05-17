@@ -107,7 +107,7 @@ export function ParalelaView({ logo }: { logo?: string }) {
 
         <div className="relative z-10 space-y-2 text-center md:text-left flex-1">
           <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tight">
-            {data.subtitle} – <span className="text-primary">{data.title}</span>
+            {data.subtitle} – <span className="text-[#8CC63F]">{data.title}</span>
           </h1>
           <p className="text-xl font-bold text-muted-foreground italic">
             {data.description}
