@@ -6,7 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { AuthModal } from "@/components/auth-modal"
 import type { User as UserType } from "@/app/page"
 
-import { supabase } from "@/lib/supabase"
+
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,13 +17,14 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // Simular un breve tiempo de carga para dar sensación de autenticación real
+      await new Promise(resolve => setTimeout(resolve, 600))
 
-      if (error) throw error
+      if (!email || !password) {
+        throw new Error("Por favor ingresa tu correo y contraseña")
+      }
 
+      // Al ser una versión de prueba/maqueta, permitimos el ingreso directo al dashboard
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Error al iniciar sesión")

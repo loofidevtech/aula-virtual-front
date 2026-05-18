@@ -33,7 +33,7 @@ export default async function CoursePage({ params }: PageProps) {
         subtitle={course.subtitle}
         description={course.description}
         metrics={metrics}
-        gradient="from-secondary via-blue-900 to-blue-800"
+        gradient={course.gradient || "from-secondary via-blue-900 to-blue-800"}
       />
 
       <Tabs defaultValue="etapas" className="w-full">

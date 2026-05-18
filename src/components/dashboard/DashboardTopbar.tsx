@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+
 import { LogOut, User as UserIcon, Settings } from "lucide-react"
 
 interface DashboardTopbarProps {
@@ -27,7 +27,6 @@ export function DashboardTopbar({ userName = "Estudiante" }: DashboardTopbarProp
   const router = useRouter()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
     router.push("/login")
   }
 

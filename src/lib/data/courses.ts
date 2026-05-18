@@ -1,5 +1,6 @@
 // lib/data/courses.ts
 // Single Source of Truth para los datos del Aula Virtual
+import catalog from "./academy_catalog.json"
 
 export type Badge = "Teoría" | "Problemas" | "Simulacros" | "Mini simulacro"
 
@@ -39,6 +40,7 @@ export interface Course {
   totalModules: number
   levelsPerStage: number
   stages: Stage[]
+  gradient?: string
 }
 
 export interface ProgramCard {
@@ -326,7 +328,38 @@ export const courses: Course[] = [
 ]
 
 export function getCourse(id: string): Course | undefined {
-  return courses.find((c) => c.id === id)
+  const found = courses.find((c) => c.id === id)
+  if (found) return found
+
+  // Si no está en el array estático de courses, lo buscamos en el catálogo de programas
+  const prog = catalog.programas.find((p) => p.id === id)
+  if (!prog) return undefined
+
+  // Determinamos un gradiente acorde a su color de acento
+  let gradient = "from-blue-900 via-blue-800 to-blue-700"
+  if (prog.id === "canguro_matematico") gradient = "from-orange-700 via-orange-600 to-amber-600"
+  if (prog.id === "conamat") gradient = "from-red-800 via-red-700 to-red-600"
+  if (prog.id === "concurso_matematica_binaria") gradient = "from-emerald-800 via-emerald-700 to-teal-700"
+  if (prog.id === "conemate") gradient = "from-teal-800 via-teal-700 to-cyan-700"
+  if (prog.id === "juegos_logicos") gradient = "from-amber-700 via-orange-600 to-amber-500"
+  if (prog.id === "onem") gradient = "from-blue-800 via-blue-700 to-indigo-700"
+
+  // Obtenemos el curso ONEM como base para clonar su estructura de etapas, niveles y módulos
+  const baseCourse = courses.find((c) => c.id === "onem")!
+
+  return {
+    id: prog.id,
+    title: prog.title,
+    subtitle: (prog as any).type ? `Programa ${(prog as any).type}` : "Programa Oficial de Entrenamiento",
+    description: `Estructura de entrenamiento especializada por etapas y niveles para ${prog.title}.`,
+    totalStages: baseCourse.totalStages,
+    totalModules: baseCourse.totalModules,
+    levelsPerStage: baseCourse.levelsPerStage,
+    gradient,
+    stages: baseCourse.stages.map(stage => ({
+      ...stage,
+    }))
+  }
 }
 
 export function getStage(courseId: string, stageId: string): Stage | undefined {
