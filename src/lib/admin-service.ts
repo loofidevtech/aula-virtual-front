@@ -126,15 +126,72 @@ let mockedGames: GameQuestion[] = [
   { id: "g_4", courseId: "onem", question: "En un torneo de ajedrez participan 5 personas. Si todos juegan contra todos una vez, ¿cuántas partidas se juegan?", options: ["10", "15", "20", "25"], correctAnswer: 0, points: 30 }
 ]
 
+import { supabase } from "./supabase"
+
 // ── Funciones CRUD Simuladas ────────────────────────────────────────────────
 
 export const adminService = {
   async login(email: string, password: string): Promise<AdminUser | null> {
-    await new Promise(resolve => setTimeout(resolve, 800))
-    if (email === "admin@albert.com" && password === "admin123") {
-      return { id: "admin_1", name: "Administrador Principal", email: "admin@albert.com", role: "admin" }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        // Si el usuario es admin@albert.com y falla (porque no existe aún en auth), lo creamos proactivamente
+        if (email === "admin@albert.com" && password === "admin123") {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: "Administrador Principal",
+                rol: "ADMIN",
+              }
+            }
+          })
+
+          if (signUpError) {
+            console.error("Error creando admin proactivamente:", signUpError)
+            return null
+          }
+
+          if (signUpData.user) {
+            // Intentar insertar en perfiles
+            await supabase.from("perfiles").insert({
+              id: signUpData.user.id,
+              full_name: "Administrador Principal",
+              email: "admin@albert.com",
+              rol: "ADMIN",
+            })
+          }
+
+          return { id: signUpData.user?.id || "admin_1", name: "Administrador Principal", email: "admin@albert.com", role: "admin" }
+        }
+
+        return null
+      }
+
+      if (data.user) {
+        // Consultar el rol en perfiles
+        const { data: perfil } = await supabase.from("perfiles").select("rol, full_name").eq("id", data.user.id).single()
+        
+        const role = (perfil?.rol === "ADMIN" || email === "admin@albert.com") ? "admin" : "student"
+
+        return {
+          id: data.user.id,
+          name: perfil?.full_name || "Administrador Principal",
+          email: data.user.email || email,
+          role: role as any
+        }
+      }
+
+      return null
+    } catch (err) {
+      console.error("Error en admin login:", err)
+      return null
     }
-    return null
   },
 
   // Estudiantes
