@@ -76,7 +76,7 @@ export default function RegistroPage() {
         <AuthModal
           type="register"
           onClose={() => router.push("/")}
-          onLogin={() => {}}
+          onLogin={() => { }}
           onRegister={handleRegister}
           onSwitchToRegister={() => router.push("/registro")}
           onSwitchToLogin={() => router.push("/login")}
