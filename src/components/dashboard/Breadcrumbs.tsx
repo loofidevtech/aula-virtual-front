@@ -30,15 +30,32 @@ export function Breadcrumbs() {
   const pathname = usePathname()
   const segments = pathname.split("/").filter(Boolean)
 
-  const crumbs = segments.map((seg, i) => {
-    const href = "/" + segments.slice(0, i + 1).join("/")
-    return { label: getLabel(seg), href }
+  const excludedSegments = new Set(["etapas", "niveles", "modulos"])
+  const stageSegments = new Set(["institucional", "ugel", "dre", "nacional"])
+
+  const allCrumbs = segments.map((seg, i) => {
+    let href = "/" + segments.slice(0, i + 1).join("/")
+    
+    // Redirect stage segments to the course detail page (segments[2])
+    if (stageSegments.has(seg)) {
+      const courseId = segments[2]
+      href = `/dashboard/cursos/${courseId}`
+    }
+    
+    return {
+      label: getLabel(seg),
+      href,
+      segment: seg
+    }
   })
+
+  // Filter out intermediate layout-only segments (etapas, niveles, modulos)
+  const crumbs = allCrumbs.filter(crumb => !excludedSegments.has(crumb.segment))
 
   return (
     <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm mb-6">
       {crumbs.map((crumb, i) => (
-        <span key={crumb.href} className="flex items-center gap-1.5">
+        <span key={crumb.href + "-" + i} className="flex items-center gap-1.5">
           {i < crumbs.length - 1 ? (
             <>
               <Link

@@ -1,7 +1,7 @@
 // components/dashboard/DashboardTopbar.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Bell, Crown, Menu, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -25,8 +25,24 @@ interface DashboardTopbarProps {
 export function DashboardTopbar({ userName = "Estudiante" }: DashboardTopbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
+  const [name, setName] = useState(userName)
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("currentUser")
+    if (userStr) {
+      try {
+        const parsed = JSON.parse(userStr)
+        if (parsed && parsed.name) {
+          setName(parsed.name)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [])
 
   const handleLogout = async () => {
+    localStorage.removeItem("currentUser")
     router.push("/login")
   }
 
@@ -85,12 +101,12 @@ export function DashboardTopbar({ userName = "Estudiante" }: DashboardTopbarProp
               <div className="flex items-center gap-2.5 cursor-pointer group outline-none">
                 <Avatar className="h-10 w-10 border-2 border-primary/30 group-hover:border-primary transition-colors">
                   <AvatarFallback className="bg-primary text-white font-black text-sm">
-                    {userName.charAt(0).toUpperCase()}
+                    {name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block">
                   <p className="text-foreground font-bold text-sm leading-tight">
-                    {userName.split(" ")[0]} C.
+                    {name.split(" ")[0]} C.
                   </p>
                 </div>
               </div>

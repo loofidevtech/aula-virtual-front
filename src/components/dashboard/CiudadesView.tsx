@@ -9,7 +9,7 @@ import {
   Users,
   GraduationCap,
   Leaf,
-  MapMapPin, // close enough to a maple leaf or tour icon
+  MapPin, // close enough to a maple leaf or tour icon
   BarChart2,
   CalendarDays
 } from "lucide-react"

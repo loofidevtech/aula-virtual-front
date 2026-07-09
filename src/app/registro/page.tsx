@@ -33,6 +33,12 @@ export default function RegistroPage() {
       }
 
       if (authData.user) {
+        // Guardar usuario en localStorage
+        localStorage.setItem("currentUser", JSON.stringify({
+          name: data.name,
+          email: data.email
+        }))
+
         // Intentar insertar en la tabla perfiles
         const { error: profileError } = await supabase.from('perfiles').insert({
           id: authData.user.id,
@@ -48,14 +54,14 @@ export default function RegistroPage() {
         })
 
         if (profileError) {
-          console.error("Aviso: Error al insertar en perfiles (posible falta de tabla o RLS):", profileError)
+          console.error("Aviso: Error al insertar en perfiles:", profileError)
         }
       }
 
-      alert("¡Registro exitoso en Supabase! Bienvenido a la plataforma.")
+      alert("¡Registro exitoso! Bienvenido a la plataforma.")
       router.push("/dashboard")
     } catch (error: any) {
-      alert(error.message || "Error al registrarse en Supabase")
+      alert(error.message || "Error al registrarse")
     } finally {
       setLoading(false)
     }

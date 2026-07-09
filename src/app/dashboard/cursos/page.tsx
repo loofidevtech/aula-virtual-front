@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ChevronRight, Search, BookOpen } from "lucide-react"
 import { Breadcrumbs } from "@/components/dashboard/Breadcrumbs"
 import catalog from "@/lib/data/academy_catalog.json"
+import { freemiumService } from "@/lib/freemium-service"
 
 export default function CursosPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -59,6 +60,8 @@ export default function CursosPage() {
           const subTextColor = lightTheme ? "text-[#0F172A]/60" : "text-white/60"
           const borderColor = lightTheme ? "border-[#0F172A]/10" : "border-white/10"
 
+          const isPremium = freemiumService.getEnrollmentStatus(p.id) === "premium"
+
           return (
             <Link
               key={p.id}
@@ -82,6 +85,13 @@ export default function CursosPage() {
                 <div className={`absolute top-4 left-4 px-3 py-1 ${lightTheme ? "bg-black/20 text-[#0F172A]" : "bg-white/20 text-white"} backdrop-blur-md text-[10px] font-black uppercase tracking-widest rounded-lg border ${lightTheme ? "border-black/10" : "border-white/20"}`}>
                   {(p as any).type || "Programa Oficial"}
                 </div>
+
+                {/* Premium Active Badge */}
+                {isPremium && (
+                  <div className="absolute top-4 right-4 bg-amber-500 text-slate-955 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border border-amber-400 shadow-lg animate-pulse z-20">
+                    Premium 🏆
+                  </div>
+                )}
               </div>
 
               {/* Content */}

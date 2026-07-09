@@ -31,9 +31,29 @@ export default function LoginPage() {
         throw authError
       }
 
+      if (data?.user) {
+        const isSystemAdmin = data.user.email === "admin@albert.com" || data.user.user_metadata?.rol === "ADMIN";
+        localStorage.setItem("currentUser", JSON.stringify({
+          name: data.user.user_metadata?.full_name || "Estudiante",
+          email: data.user.email,
+          role: isSystemAdmin ? "admin" : "student"
+        }))
+
+        if (isSystemAdmin) {
+          sessionStorage.setItem("adminUser", JSON.stringify({
+            id: data.user.id,
+            name: data.user.user_metadata?.full_name || "Administrador Principal",
+            email: data.user.email,
+            role: "admin"
+          }))
+          router.push("/admin/dashboard")
+          return
+        }
+      }
+
       router.push("/dashboard")
     } catch (err: any) {
-      setError(err.message || "Error al iniciar sesión en Supabase")
+      setError(err.message || "Error al iniciar sesión")
     } finally {
       setLoading(false)
     }

@@ -52,6 +52,17 @@ export interface GameQuestion {
 
 let mockedStudents: Student[] = [
   {
+    id: "student_default",
+    name: "Andrés Castro",
+    email: "estudiante@albert.com",
+    phone: "951753456",
+    registeredAt: "2026-06-01T08:00:00Z",
+    subscriptions: [
+      { courseId: "aritm", subscribed: false },
+      { courseId: "algeb", subscribed: false }
+    ]
+  },
+  {
     id: "user_1",
     name: "Adrian M.",
     email: "adrian@ejemplo.com",
@@ -59,7 +70,7 @@ let mockedStudents: Student[] = [
     registeredAt: "2026-05-10T10:00:00Z",
     subscriptions: [
       { courseId: "aritm", subscribed: false },
-      { courseId: "algeb", subscribed: true }
+      { courseId: "algeb", subscribed: false }
     ]
   },
   {
@@ -197,6 +208,28 @@ export const adminService = {
   // Estudiantes
   async getStudents(): Promise<Student[]> {
     await new Promise(resolve => setTimeout(resolve, 400))
+    // Synchronize localStorage student_enrollments to active student subscriptions
+    if (typeof window !== "undefined") {
+      const currentUserStr = localStorage.getItem("currentUser")
+      if (currentUserStr) {
+        try {
+          const currentUser = JSON.parse(currentUserStr)
+          const studentIndex = mockedStudents.findIndex(s => s.email === currentUser.email)
+          if (studentIndex > -1) {
+            const enrollmentsStr = localStorage.getItem("student_enrollments")
+            if (enrollmentsStr) {
+              const enrollments = JSON.parse(enrollmentsStr)
+              mockedStudents[studentIndex].subscriptions = Object.keys(enrollments).map(courseId => ({
+                courseId,
+                subscribed: enrollments[courseId].subscribed
+              }))
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
     return [...mockedStudents]
   },
 
@@ -212,6 +245,29 @@ export const adminService = {
       mockedStudents[studentIndex].subscriptions[subIndex].subscribed = subscribed
     } else {
       mockedStudents[studentIndex].subscriptions.push({ courseId, subscribed })
+    }
+
+    // Sync with localStorage enrollments for active student (checking email)
+    if (typeof window !== "undefined") {
+      const currentUserStr = localStorage.getItem("currentUser")
+      if (currentUserStr) {
+        try {
+          const currentUser = JSON.parse(currentUserStr)
+          if (currentUser.email === student.email) {
+            const enrollmentsStr = localStorage.getItem("student_enrollments") || "{}"
+            const enrollments = JSON.parse(enrollmentsStr)
+            enrollments[courseId] = { subscribed }
+            localStorage.setItem("student_enrollments", JSON.stringify(enrollments))
+            
+            // Reset visual unlock animation flag to trigger premium upgrade celebration on course entry
+            if (subscribed) {
+              localStorage.removeItem(`first_premium_animated_${courseId}`)
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
     }
     return true
   },

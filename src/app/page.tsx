@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { LandingPage } from "@/components/landing-page"
@@ -29,16 +29,30 @@ export interface Course {
 
 export default function Home() {
   const router = useRouter()
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("currentUser")
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr))
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [])
 
   const handleLogout = () => {
+    localStorage.removeItem("currentUser")
+    setCurrentUser(null)
     router.push("/")
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar
-        isLoggedIn={false}
-        user={null}
+        isLoggedIn={!!currentUser}
+        user={currentUser}
         onLogout={handleLogout}
       />
 
