@@ -169,16 +169,20 @@ export function VirtualClassroom({
     }
   }
 
-  const materials = [
-    { id: "1", title: "Guía de estudio - Unidad 1", type: "PDF", size: "2.4 MB" },
-    { id: "2", title: "Ejercicios resueltos", type: "PDF", size: "1.8 MB" },
-    { id: "3", title: "Fórmulas y teoremas", type: "PDF", size: "850 KB" },
-    { id: "4", title: "Problemas de práctica", type: "PDF", size: "3.2 MB" },
-  ]
-
   const activeModule = course.modules?.find(m =>
     m.lessons.some(l => l.id === (selectedLockedLesson?.id || currentLessonId))
   )
+
+  const [materials, setMaterials] = useState<any[]>([])
+
+  useEffect(() => {
+    if (activeModule) {
+      const list = freemiumService.getModuleMaterials(course.id, activeModule.id)
+      setMaterials(list)
+    } else {
+      setMaterials([])
+    }
+  }, [course.id, activeModule?.id])
 
   const classroomContent = (
     <div className="p-4 lg:p-8 max-w-7xl mx-auto">
@@ -351,6 +355,13 @@ export function VirtualClassroom({
                     </div>
                   </li>
                 ))}
+                {materials.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      No hay recursos ni PDFs adicionales subidos para este módulo.
+                    </p>
+                  </div>
+                )}
               </ul>
             </CardContent>
           </Card>

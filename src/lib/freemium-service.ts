@@ -15,6 +15,14 @@ export interface VideoAccessCheckResult {
 
 export type EnrollmentStatus = "none" | "free" | "premium";
 
+export interface Material {
+  id: string;
+  title: string;
+  type: string;
+  size: string;
+  url: string;
+}
+
 export const freemiumService = {
   /**
    * Get the current logged-in user profile from localStorage.
@@ -78,9 +86,6 @@ export const freemiumService = {
 
   /**
    * Get the student's enrollment status for a specific course.
-   * - "none": Student is not enrolled.
-   * - "free": Student is enrolled in the free tier (limit of 3 videos).
-   * - "premium": Student is enrolled in the premium tier (unlimited access).
    */
   getEnrollmentStatus(courseId: string): EnrollmentStatus {
     if (typeof window === "undefined") return "none";
@@ -92,8 +97,7 @@ export const freemiumService = {
           return enrollments[courseId].subscribed ? "premium" : "free";
         }
       } else {
-        // Fallback to match mock students in admin-service for "Adrian M." (adrian@ejemplo.com)
-        // Aritmética: free (subscribed: false), Álgebra: premium (subscribed: true), others: none
+        // Fallback default setup
         const initialMock: Record<string, { subscribed: boolean }> = {
           aritm: { subscribed: false },
           algeb: { subscribed: false },
@@ -126,7 +130,6 @@ export const freemiumService = {
 
   /**
    * Directly sets/modifies the premium subscription status of a course.
-   * Simulates the admin action modifying access.
    */
   setPremiumAccess(courseId: string, isPremium: boolean): void {
     if (typeof window === "undefined") return;
@@ -146,7 +149,6 @@ export const freemiumService = {
 
   /**
    * Checks if it's the first time the student enters a course classroom.
-   * Flags it to false after reading once.
    */
   checkAndClearFirstAccess(courseId: string): boolean {
     if (typeof window === "undefined") return false;
@@ -161,7 +163,6 @@ export const freemiumService = {
 
   /**
    * Checks if a course was newly upgraded to Premium, for triggering the lock animation.
-   * Flags it to true after rendering once.
    */
   checkAndClearFirstPremiumUnlock(courseId: string): boolean {
     if (typeof window === "undefined") return false;
@@ -195,18 +196,14 @@ export const freemiumService = {
       return { hasAccess: true, watchedCount: 0, limit };
     }
     if (enrollment === "none") {
-      // Not enrolled: can't watch anything
       return { hasAccess: false, reason: "not_subscribed", watchedCount: 0, limit };
     }
 
     const watched = this.getWatchedVideos(courseId);
-    
-    // If the video was already watched, it's always unlocked
     if (watched.includes(videoId)) {
       return { hasAccess: true, watchedCount: watched.length, limit };
     }
 
-    // Otherwise, check if we've reached the free tier watch limit
     if (watched.length >= limit) {
       return {
         hasAccess: false,
@@ -219,6 +216,9 @@ export const freemiumService = {
     return { hasAccess: true, watchedCount: watched.length, limit };
   },
 
+  /**
+   * Compiles the sales contact WhatsApp URL using current session and navigation metadata
+   */
   generateWhatsAppUrl(
     userName: string,
     userEmail: string | undefined,
@@ -227,8 +227,6 @@ export const freemiumService = {
     videoTitle: string
   ): string {
     const targetNumber = "34680803900"; // +34 680 80 39 00
-    
-    // Clean up duplicate "Curso " prefix if present in the course name
     const cleanCourseName = courseName.replace(/^Curso\s+/i, ""); 
     
     const message = 
@@ -246,5 +244,65 @@ export const freemiumService = {
 Actualmente estoy visualizando el contenido gratuito y deseo desbloquear todos los módulos para continuar con mi aprendizaje. ¡Muchas gracias!`;
     
     return `https://wa.me/${targetNumber}?text=${encodeURIComponent(message)}`;
+  },
+
+  /**
+   * Get dynamic study materials for a specific course module.
+   */
+  getModuleMaterials(courseId: string, moduleId: string): Material[] {
+    if (typeof window === "undefined") return [];
+    try {
+      const key = `materials_${courseId}_${moduleId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+
+      // Fallback initial mock files for Geometry (geometria)
+      if (courseId === "onem" && moduleId === "geometria") {
+        const initial = [
+          { id: "mat_1", title: "Guía de estudio - Unidad 1", type: "PDF", size: "2.4 MB", url: "/materials/guia1.pdf" },
+          { id: "mat_2", title: "Ejercicios resueltos - Geometría", type: "PDF", size: "1.8 MB", url: "/materials/ejercicios1.pdf" },
+          { id: "mat_3", title: "Fórmulas y teoremas clave", type: "PDF", size: "850 KB", url: "/materials/formulas1.pdf" },
+          { id: "mat_4", title: "Problemas de práctica avanzada", type: "PDF", size: "3.2 MB", url: "/materials/practica1.pdf" },
+        ];
+        localStorage.setItem(key, JSON.stringify(initial));
+        return initial;
+      }
+    } catch (e) {
+      console.error("Error reading module materials:", e);
+    }
+    return [];
+  },
+
+  /**
+   * Adds a new material resource to a course module.
+   */
+  addModuleMaterial(courseId: string, moduleId: string, material: Omit<Material, "id">): Material {
+    const key = `materials_${courseId}_${moduleId}`;
+    const list = this.getModuleMaterials(courseId, moduleId);
+    const newMaterial: Material = {
+      ...material,
+      id: `mat_${Date.now()}`
+    };
+    const updated = [...list, newMaterial];
+    if (typeof window !== "undefined") {
+      localStorage.setItem(key, JSON.stringify(updated));
+    }
+    return newMaterial;
+  },
+
+  /**
+   * Deletes a material resource from a course module.
+   */
+  deleteModuleMaterial(courseId: string, moduleId: string, materialId: string): boolean {
+    const key = `materials_${courseId}_${moduleId}`;
+    const list = this.getModuleMaterials(courseId, moduleId);
+    const filtered = list.filter(m => m.id !== materialId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(key, JSON.stringify(filtered));
+      return true;
+    }
+    return false;
   }
 };

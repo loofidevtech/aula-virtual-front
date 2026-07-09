@@ -14,7 +14,8 @@ import {
   Gamepad2,
   Eye,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +28,8 @@ import {
   VideoItem, 
   GameQuestion 
 } from "@/lib/admin-service"
+import { getCourse } from "@/lib/data/courses"
+import { freemiumService, Material } from "@/lib/freemium-service"
 
 export default function AdminDashboardPage() {
   const router = useRouter()
@@ -65,6 +68,16 @@ export default function AdminDashboardPage() {
   const [newGameCorrect, setNewGameCorrect] = useState(0)
   const [newGameCourseId, setNewGameCourseId] = useState("aritm")
 
+  // Materials states
+  const [selectedCourseId, setSelectedCourseId] = useState("onem")
+  const [selectedModuleId, setSelectedModuleId] = useState("geometria")
+  const [materialsList, setMaterialsList] = useState<Material[]>([])
+  
+  const [newMaterialTitle, setNewMaterialTitle] = useState("")
+  const [newMaterialType, setNewMaterialType] = useState("PDF")
+  const [newMaterialSize, setNewMaterialSize] = useState("1.5 MB")
+  const [newMaterialUrl, setNewMaterialUrl] = useState("/materials/doc.pdf")
+
   useEffect(() => {
     const adminUser = sessionStorage.getItem("adminUser")
     if (!adminUser) {
@@ -74,6 +87,29 @@ export default function AdminDashboardPage() {
 
     loadAllData()
   }, [])
+
+  // Sync tab from URL query params
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get("tab")
+      if (tab) {
+        setActiveTab(tab)
+      }
+    }
+  }, [router])
+
+  // Load materials when selected course or module changes
+  useEffect(() => {
+    if (activeTab === "materials") {
+      loadMaterials()
+    }
+  }, [selectedCourseId, selectedModuleId, activeTab])
+
+  const loadMaterials = () => {
+    const list = freemiumService.getModuleMaterials(selectedCourseId, selectedModuleId)
+    setMaterialsList(list)
+  }
 
   const loadAllData = async () => {
     setLoading(true)
@@ -113,6 +149,26 @@ export default function AdminDashboardPage() {
         return s
       }))
     }
+  }
+
+  const handleAddMaterial = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newMaterialTitle) return
+
+    freemiumService.addModuleMaterial(selectedCourseId, selectedModuleId, {
+      title: newMaterialTitle,
+      type: newMaterialType,
+      size: newMaterialSize,
+      url: newMaterialUrl
+    })
+
+    setNewMaterialTitle("")
+    loadMaterials()
+  }
+
+  const handleDeleteMaterial = (materialId: string) => {
+    freemiumService.deleteModuleMaterial(selectedCourseId, selectedModuleId, materialId)
+    loadMaterials()
   }
 
   const handleAddCourse = async (e: React.FormEvent) => {
@@ -198,6 +254,25 @@ export default function AdminDashboardPage() {
   const filteredGames = games.filter(g => 
     g.question.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const getCourseModules = (cId: string) => {
+    const courseData = getCourse(cId)
+    if (!courseData) return []
+    const list: { id: string; title: string; levelTitle: string; stageTitle: string }[] = []
+    courseData.stages.forEach(stage => {
+      stage.levels.forEach(level => {
+        level.modules.forEach(mod => {
+          list.push({
+            id: mod.id,
+            title: mod.title,
+            levelTitle: level.title,
+            stageTitle: stage.title
+          })
+        })
+      })
+    })
+    return list
+  }
 
   if (loading) {
     return (
@@ -287,6 +362,9 @@ export default function AdminDashboardPage() {
           </TabsTrigger>
           <TabsTrigger value="games" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
             <Gamepad2 className="h-4 w-4" /> Práctica con Albert (Juegos)
+          </TabsTrigger>
+          <TabsTrigger value="materials" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
+            <FileText className="h-4 w-4" /> Gestionar Material
           </TabsTrigger>
         </TabsList>
 
@@ -895,6 +973,183 @@ export default function AdminDashboardPage() {
                 </Card>
               )
             })}
+          </div>
+        </TabsContent>
+
+        {/* ── TAB 5: STUDY MATERIALS ────────────────────────────────────────── */}
+        <TabsContent value="materials" className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            
+            {/* Left Panel: Upload/Add resource Form */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-card border-border/50 shadow-xl border-l-4 border-l-primary sticky top-24">
+                <CardHeader>
+                  <CardTitle className="text-lg font-black flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" /> Agregar Material de Estudio
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddMaterial} className="space-y-4">
+                    
+                    {/* Select Course */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Curso</label>
+                      <select
+                        value={selectedCourseId}
+                        onChange={(e) => {
+                          const cId = e.target.value
+                          setSelectedCourseId(cId)
+                          const mods = getCourseModules(cId)
+                          if (mods.length > 0) {
+                            setSelectedModuleId(mods[0].id)
+                          }
+                        }}
+                        className="w-full h-12 rounded-xl bg-muted/50 border-none px-4 text-foreground outline-none cursor-pointer font-bold"
+                      >
+                        {courses.map(c => (
+                          <option key={c.id} value={c.id}>{c.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Select Module */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Módulo Específico</label>
+                      <select
+                        value={selectedModuleId}
+                        onChange={(e) => setSelectedModuleId(e.target.value)}
+                        className="w-full h-12 rounded-xl bg-muted/50 border-none px-4 text-foreground outline-none cursor-pointer text-xs font-semibold"
+                      >
+                        {getCourseModules(selectedCourseId).map(m => (
+                          <option key={m.id} value={m.id}>
+                            [{m.stageTitle} - {m.levelTitle}] {m.title}
+                          </option>
+                        ))}
+                        {getCourseModules(selectedCourseId).length === 0 && (
+                          <option value="">No hay módulos en este curso</option>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Material Title */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Título del Recurso</label>
+                      <Input
+                        placeholder="Ej. Ficha de Ejercicios - Congruencias"
+                        value={newMaterialTitle}
+                        onChange={(e) => setNewMaterialTitle(e.target.value)}
+                        className="h-12 rounded-xl bg-muted/50 border-none px-4"
+                        required
+                      />
+                    </div>
+
+                    {/* Type and Size */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Tipo de Archivo</label>
+                        <select
+                          value={newMaterialType}
+                          onChange={(e) => setNewMaterialType(e.target.value)}
+                          className="w-full h-12 rounded-xl bg-muted/50 border-none px-4 text-foreground outline-none cursor-pointer font-bold"
+                        >
+                          <option value="PDF">PDF</option>
+                          <option value="DOCX">Word Document</option>
+                          <option value="ZIP">ZIP Archive</option>
+                          <option value="Excel">Excel Sheet</option>
+                          <option value="Enlace">Enlace Web</option>
+                        </select>
+                      </div>
+                      
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Tamaño (Ej. 2.4 MB)</label>
+                        <Input
+                          placeholder="Ej. 1.2 MB"
+                          value={newMaterialSize}
+                          onChange={(e) => setNewMaterialSize(e.target.value)}
+                          className="h-12 rounded-xl bg-muted/50 border-none px-4"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* File / Link URL */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Ruta / URL de Descarga</label>
+                      <Input
+                        placeholder="Ej. /materials/ficha1.pdf"
+                        value={newMaterialUrl}
+                        onChange={(e) => setNewMaterialUrl(e.target.value)}
+                        className="h-12 rounded-xl bg-muted/50 border-none px-4 text-xs font-mono"
+                        required
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full bg-primary hover:bg-primary/95 text-white font-bold h-12 rounded-xl mt-4 cursor-pointer">
+                      Publicar Recurso
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Panel: Materials List */}
+            <div className="lg:col-span-3 space-y-4">
+              <div className="flex justify-between items-center bg-card p-4 rounded-2xl border border-border/50 shadow-sm">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Archivos Disponibles</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Visualizando material para el módulo seleccionado a la izquierda.
+                  </p>
+                </div>
+                <span className="text-xs font-bold bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full">
+                  {materialsList.length} recursos
+                </span>
+              </div>
+
+              {/* Materials Files */}
+              <div className="space-y-3">
+                {materialsList.map(mat => (
+                  <Card key={mat.id} className="bg-card border-border/50 hover:border-border/80 transition-colors shadow-sm">
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="h-11 w-11 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center font-black text-xs shrink-0">
+                          {mat.type.toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-white text-sm truncate">{mat.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                            <span>Tamaño: {mat.size}</span>
+                            <span>•</span>
+                            <span className="font-mono text-[10px] truncate max-w-[200px]" title={mat.url}>{mat.url}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Delete action */}
+                      <button
+                        onClick={() => handleDeleteMaterial(mat.id)}
+                        className="h-9 w-9 rounded-xl border border-destructive/20 text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Eliminar material"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {materialsList.length === 0 && (
+                  <div className="bg-card border border-dashed border-border/50 rounded-3xl p-16 text-center space-y-3">
+                    <FileText className="h-10 w-10 text-muted-foreground mx-auto animate-pulse" />
+                    <div>
+                      <p className="font-black text-white text-base">No hay materiales en este módulo</p>
+                      <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
+                        Utiliza el formulario de la izquierda para subir PDFs, prácticas u hojas de fórmulas para este módulo de estudio.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

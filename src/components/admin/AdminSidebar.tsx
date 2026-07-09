@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Gamepad2,
-  Video
+  Video,
+  FileText
 } from "lucide-react"
 import Image from "next/image"
 
@@ -21,6 +22,7 @@ export function AdminSidebar() {
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
     { icon: Users, label: "Usuarios y Suscripciones", href: "/admin/dashboard?tab=users" },
     { icon: BookOpen, label: "Gestión de Cursos", href: "/admin/dashboard?tab=courses" },
+    { icon: FileText, label: "Gestionar Material", href: "/admin/dashboard?tab=materials" },
     { icon: Video, label: "Gestión de Videos", href: "/admin/dashboard?tab=videos" },
     { icon: Gamepad2, label: "Juegos Interactivos", href: "/admin/dashboard?tab=games" },
   ]
