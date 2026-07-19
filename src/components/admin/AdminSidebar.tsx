@@ -29,6 +29,7 @@ export function AdminSidebar() {
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminUser")
+    localStorage.removeItem("currentUser")
     router.push("/admin/login")
   }
 

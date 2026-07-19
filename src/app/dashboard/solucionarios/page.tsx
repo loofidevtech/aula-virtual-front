@@ -53,15 +53,15 @@ export default function SolucionariosPage() {
                   background: `linear-gradient(135deg, ${(s as any).accentColor || "#1e293b"} 0%, ${(s as any).accentColor ? (s as any).accentColor + 'CC' : "#0f172a"} 100%)` 
                 }}
               >
-                {/* Banner Image */}
-                <div className="relative aspect-[21/9] overflow-hidden">
+                {/* Banner Image (Translucent Logo) */}
+                <div className="relative aspect-[21/9] overflow-hidden bg-black/10">
                   <Image
-                    src={s.banners?.[0] || "/placeholder.jpg"}
+                    src={s.logos?.[0] || "/logo_principal.png"}
                     alt={s.title}
                     fill
-                    className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-110"
+                    className="object-contain opacity-25 p-4 transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   
                   {/* Type Badge */}
                   <div className={`absolute top-4 left-4 px-3 py-1 ${lightTheme ? "bg-black/20 text-[#0F172A]" : "bg-white/20 text-white"} backdrop-blur-md text-[10px] font-black uppercase tracking-widest rounded-lg border ${lightTheme ? "border-black/10" : "border-white/20"}`}>
@@ -71,19 +71,8 @@ export default function SolucionariosPage() {
 
                 {/* Content */}
                 <div className="p-6 space-y-3 relative">
-                  {/* Logo Overlay */}
-                  <div className="absolute -top-10 right-6 w-16 h-16 bg-white rounded-2xl shadow-xl p-2 border border-border/50 flex items-center justify-center">
-                    <Image
-                      src={s.logos?.[0] || "/logo_principal.png"}
-                      alt="Logo"
-                      width={60}
-                      height={60}
-                      className="object-contain"
-                    />
-                  </div>
-
-                  <div className="pr-16">
-                    <h3 className={`font-black text-lg ${textColor} leading-tight line-clamp-1`}>
+                  <div>
+                    <h3 className={`font-black text-xl md:text-2xl ${textColor} leading-tight line-clamp-2`}>
                       {s.title}
                     </h3>
                     <p className={`text-xs font-bold ${subTextColor} uppercase tracking-widest`}>

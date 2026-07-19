@@ -43,6 +43,7 @@ export function DashboardTopbar({ userName = "Estudiante" }: DashboardTopbarProp
 
   const handleLogout = async () => {
     localStorage.removeItem("currentUser")
+    sessionStorage.removeItem("adminUser")
     router.push("/login")
   }
 

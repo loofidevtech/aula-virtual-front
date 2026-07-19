@@ -44,6 +44,7 @@ export default function Home() {
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser")
+    sessionStorage.removeItem("adminUser")
     setCurrentUser(null)
     router.push("/")
   }

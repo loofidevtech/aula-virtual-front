@@ -190,6 +190,10 @@ export const adminService = {
         
         const role = (perfil?.rol === "ADMIN" || email === "admin@albert.com") ? "admin" : "student"
 
+        if (role !== "admin") {
+          return null
+        }
+
         return {
           id: data.user.id,
           name: perfil?.full_name || "Administrador Principal",

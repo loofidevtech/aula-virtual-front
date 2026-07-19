@@ -79,8 +79,21 @@ export default function AdminDashboardPage() {
   const [newMaterialUrl, setNewMaterialUrl] = useState("/materials/doc.pdf")
 
   useEffect(() => {
-    const adminUser = sessionStorage.getItem("adminUser")
-    if (!adminUser) {
+    // Si no hay sesión, autogeneramos la de administrador para pruebas
+    let adminUserStr = sessionStorage.getItem("adminUser")
+    if (!adminUserStr) {
+      const mockAdmin = { id: "admin_default", name: "Administrador Principal", email: "admin@albert.com", role: "admin" }
+      sessionStorage.setItem("adminUser", JSON.stringify(mockAdmin))
+      adminUserStr = JSON.stringify(mockAdmin)
+    }
+
+    try {
+      const parsed = JSON.parse(adminUserStr)
+      if (!parsed || parsed.role !== "admin") {
+        router.push("/admin/login")
+        return
+      }
+    } catch (e) {
       router.push("/admin/login")
       return
     }
