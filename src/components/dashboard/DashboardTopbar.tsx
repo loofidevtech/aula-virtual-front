@@ -2,10 +2,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Bell, Crown, Menu, X } from "lucide-react"
+import { Search, Crown, Menu, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DashboardSidebar } from "./DashboardSidebar"
+import { NotificationCenter } from "./NotificationCenter"
 
 import {
   DropdownMenu,
@@ -89,12 +90,7 @@ export function DashboardTopbar({ userName = "Estudiante" }: DashboardTopbarProp
           </div>
 
           {/* Notifications */}
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black">
-              5
-            </span>
-          </button>
+          <NotificationCenter />
 
           {/* User avatar with Dropdown */}
           <DropdownMenu>

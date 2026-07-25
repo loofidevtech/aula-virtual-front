@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { 
   Users, 
   BookOpen, 
@@ -15,7 +15,12 @@ import {
   Eye,
   Trash2,
   AlertCircle,
-  FileText
+  FileText,
+  GraduationCap,
+  PlayCircle,
+  Save,
+  UploadCloud,
+  Check
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,10 +35,15 @@ import {
 } from "@/lib/admin-service"
 import { getCourse } from "@/lib/data/courses"
 import { freemiumService, Material } from "@/lib/freemium-service"
+import { storageService } from "@/lib/storage-service"
+import { videoService } from "@/lib/video-service"
 
-export default function AdminDashboardPage() {
+function AdminDashboardContent() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState("users")
+  const searchParams = useSearchParams()
+  const tabFromQuery = searchParams.get("tab")
+  
+  const [activeTab, setActiveTab] = useState(tabFromQuery || "users")
   const [loading, setLoading] = useState(true)
   
   // Data states
@@ -78,6 +88,58 @@ export default function AdminDashboardPage() {
   const [newMaterialSize, setNewMaterialSize] = useState("1.5 MB")
   const [newMaterialUrl, setNewMaterialUrl] = useState("/materials/doc.pdf")
 
+  // Solucionarios Admin Editor States
+  const [solucionarioId, setSolucionarioId] = useState("concurso_matematica_binaria")
+  const [solNivelId, setSolNivelId] = useState("1")
+  const [solYear, setSolYear] = useState(2026)
+  const [solPdfUrl, setSolPdfUrl] = useState("/materials/solucionario_2026.pdf")
+  const [solVideoUrl, setSolVideoUrl] = useState("https://www.youtube.com/embed/dQw4w9WgXcQ")
+  const [solSimulacroUrl, setSolSimulacroUrl] = useState("/materials/simulacro_2026.pdf")
+  const [solIsFree, setSolIsFree] = useState(true)
+  const [isSavingSol, setIsSavingSol] = useState(false)
+  const [solSaveSuccess, setSolSaveSuccess] = useState(false)
+
+  const handleSaveSolucionario = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSavingSol(true)
+    
+    // Guardar recursos (Examen PDF, Video, Simulacro) por Solucionario, Nivel y Año
+    freemiumService.saveSolucionarioYearResource({
+      solucionarioId,
+      nivelId: solNivelId,
+      year: solYear,
+      pdfUrl: solPdfUrl,
+      pdfTitle: `Examen Resuelto ${solYear} (Nivel ${solNivelId})`,
+      videoUrl: solVideoUrl,
+      videoTitle: `Resolución en Video ${solYear} (Nivel ${solNivelId})`,
+      simulacroUrl: solSimulacroUrl,
+      simulacroTitle: `Simulacro Oficial ${solYear} (Nivel ${solNivelId})`,
+      isFree: solIsFree
+    })
+
+    setTimeout(() => {
+      setIsSavingSol(false)
+      setSolSaveSuccess(true)
+      setTimeout(() => setSolSaveSuccess(false), 3000)
+    }, 500)
+  }
+
+  // Auto-cargar recursos existentes al cambiar Solucionario, Nivel o Año
+  useEffect(() => {
+    const existing = freemiumService.getSolucionarioYearResource(solucionarioId, solNivelId, solYear)
+    if (existing) {
+      setSolPdfUrl(existing.pdfUrl || "")
+      setSolVideoUrl(existing.videoUrl || "")
+      setSolSimulacroUrl(existing.simulacroUrl || "")
+      setSolIsFree(existing.isFree ?? true)
+    } else {
+      setSolPdfUrl(`/materials/${solucionarioId}_n${solNivelId}_${solYear}.pdf`)
+      setSolVideoUrl("https://www.youtube.com/embed/dQw4w9WgXcQ")
+      setSolSimulacroUrl(`/materials/simulacro_n${solNivelId}_${solYear}.pdf`)
+      setSolIsFree(true)
+    }
+  }, [solucionarioId, solNivelId, solYear])
+
   useEffect(() => {
     // Si no hay sesión, autogeneramos la de administrador para pruebas
     let adminUserStr = sessionStorage.getItem("adminUser")
@@ -103,14 +165,10 @@ export default function AdminDashboardPage() {
 
   // Sync tab from URL query params
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search)
-      const tab = params.get("tab")
-      if (tab) {
-        setActiveTab(tab)
-      }
+    if (tabFromQuery) {
+      setActiveTab(tabFromQuery)
     }
-  }, [router])
+  }, [tabFromQuery])
 
   // Load materials when selected course or module changes
   useEffect(() => {
@@ -362,8 +420,18 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(val) => {
+          setActiveTab(val)
+          router.push(`/admin/dashboard?tab=${val}`)
+        }} 
+        className="w-full"
+      >
         <TabsList className="mb-8 bg-muted/50 p-1 border border-border/50 rounded-xl inline-flex flex-wrap h-auto gap-1">
+          <TabsTrigger value="solucionarios" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" /> Gestión de Solucionarios
+          </TabsTrigger>
           <TabsTrigger value="users" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
             <Users className="h-4 w-4" /> Usuarios y Suscripciones
           </TabsTrigger>
@@ -377,9 +445,244 @@ export default function AdminDashboardPage() {
             <Gamepad2 className="h-4 w-4" /> Práctica con Albert (Juegos)
           </TabsTrigger>
           <TabsTrigger value="materials" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Gestionar Material
+            <FileText className="h-4 w-4" /> Gestionar Material PDF
           </TabsTrigger>
         </TabsList>
+
+        {/* ── TAB SOLUCIONARIOS Y NIVELES ──────────────────────────────────── */}
+        <TabsContent value="solucionarios" className="space-y-6 animate-in fade-in duration-300">
+          
+          <div className="bg-card p-6 md:p-8 rounded-[2rem] border border-border/50 shadow-xl space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/50 pb-6">
+              <div>
+                <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                  <GraduationCap className="h-4 w-4" /> Administrador de Recursos por Nivel
+                </span>
+                <h3 className="text-2xl font-black text-white">Gestión de Solucionarios, PDFs y Enlaces de Videos</h3>
+                <p className="text-xs text-muted-foreground font-medium mt-1">
+                  Selecciona la olimpiada o programa, el nivel y el año para administrar sus exámenes resueltos, videos explicativos y simulacros.
+                </p>
+              </div>
+
+              {solSaveSuccess && (
+                <div className="px-4 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black uppercase tracking-wider flex items-center gap-2 animate-bounce">
+                  <Check className="h-4 w-4" /> Guardado en la Base de Datos
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSaveSolucionario} className="space-y-6">
+              {/* Selectores principales */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Selector de Programa / Solucionario */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Olimpiada o Solucionario</label>
+                  <select
+                    value={solucionarioId}
+                    onChange={(e) => setSolucionarioId(e.target.value)}
+                    className="w-full h-12 rounded-xl bg-muted/50 border border-border/50 px-4 text-foreground font-black outline-none cursor-pointer text-sm"
+                  >
+                    <option value="concurso_matematica_binaria">CMB - Concurso Nacional de Matemática Binaria</option>
+                    <option value="selectivo_onem">ONEM - Concurso Selectivo</option>
+                    <option value="olimpiada_logical">Olimpiada Matemática de Logical</option>
+                    <option value="competencia_paralela">Competencia Paralela de Matemática</option>
+                    <option value="canguro_matematico">Canguro Matemático</option>
+                    <option value="conamat">CONAMAT</option>
+                    <option value="concurso_binacional">Concurso Binacional de Matemáticas</option>
+                    <option value="copernicus_math">Concurso Copernicus Math</option>
+                    <option value="descubrimiento_matematico">Concurso Descubrimiento Matemático</option>
+                    <option value="spirit_of_math">Olimpiada Spirit of Math</option>
+                    <option value="geometria_origuela">Olimpiada de Geometría Julio Orihuela</option>
+                    <option value="olimpiada_andes">Olimpiada de los Andes</option>
+                    <option value="olimpiada_mayo">Olimpiada de Mayo</option>
+                    <option value="olimpiada_imc_de_matematicas">Olimpiada IMC de Matemáticas</option>
+                    <option value="irani_combinatoria">Olimpiada Iraní de Combinatoria</option>
+                    <option value="irani_geometria">Olimpiada Iraní de Geometría</option>
+                  </select>
+                </div>
+
+                {/* Selector de Nivel */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Nivel Educativo</label>
+                  <select
+                    value={solNivelId}
+                    onChange={(e) => setSolNivelId(e.target.value)}
+                    className="w-full h-12 rounded-xl bg-muted/50 border border-border/50 px-4 text-foreground font-bold outline-none cursor-pointer text-sm"
+                  >
+                    <option value="1">Nivel I / Nivel 1 (1° y 2° Sec)</option>
+                    <option value="2">Nivel II / Nivel 2 (3° y 4° Sec)</option>
+                    <option value="3">Nivel III / Nivel 3 (5° Sec)</option>
+                    <option value="4">Nivel IV / Nivel 4 (Avanzado)</option>
+                  </select>
+                </div>
+
+                {/* Selector de Edición / Año */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Edición / Año</label>
+                  <select
+                    value={solYear}
+                    onChange={(e) => setSolYear(Number(e.target.value))}
+                    className="w-full h-12 rounded-xl bg-muted/50 border border-border/50 px-4 text-foreground font-bold outline-none cursor-pointer text-sm"
+                  >
+                    <option value={2026}>Edición 2026 (Actual)</option>
+                    <option value={2025}>Edición 2025</option>
+                    <option value={2024}>Edición 2024</option>
+                    <option value={2023}>Edición 2023</option>
+                  </select>
+                </div>
+
+              </div>
+
+              {/* Formulario de Recursos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                
+                {/* 1. SECCIÓN EXAMEN RESUELTO EN PDF */}
+                <div className="space-y-3 bg-muted/30 p-5 rounded-2xl border border-border/50">
+                  <h4 className="text-sm font-black text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> 1. Examen Resuelto (PDF)
+                  </h4>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Sube el archivo PDF del examen resuelto a Supabase Storage o pega la URL pública.
+                  </p>
+
+                  <div className="border-2 border-dashed border-amber-500/30 rounded-2xl p-4 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-center cursor-pointer relative group">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        try {
+                          const res = await storageService.uploadMaterialPDF(file, solucionarioId)
+                          setSolPdfUrl(res.url)
+                        } catch (err: any) {
+                          alert(err.message || "Error al subir PDF a Supabase Storage.")
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="flex flex-col items-center gap-1">
+                      <UploadCloud className="h-6 w-6 text-amber-400 mb-1" />
+                      <span className="text-xs font-black text-amber-400 uppercase tracking-wider">
+                        Subir PDF a Supabase Storage
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-semibold">
+                        Haz clic para seleccionar el archivo .pdf de tu equipo
+                      </span>
+                    </div>
+                  </div>
+
+                  <Input
+                    placeholder="URL del PDF (https://.../materials/...pdf)"
+                    value={solPdfUrl}
+                    onChange={(e) => setSolPdfUrl(e.target.value)}
+                    className="h-11 rounded-xl bg-background border-border/50 text-xs font-mono"
+                    required
+                  />
+                </div>
+
+                {/* 2. SECCIÓN RESOLUCIÓN EN VIDEO */}
+                <div className="space-y-3 bg-muted/30 p-5 rounded-2xl border border-border/50">
+                  <h4 className="text-sm font-black text-primary uppercase tracking-wider flex items-center gap-2">
+                    <PlayCircle className="h-4 w-4" /> 2. Resolución en Video (Link / Embed)
+                  </h4>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Pega el enlace de la clase o resolución en video (YouTube, Vimeo, BunnyStream o MP4).
+                  </p>
+
+                  <Input
+                    placeholder="Pega la URL del video (Ej. https://www.youtube.com/watch?v=...)"
+                    value={solVideoUrl}
+                    onChange={(e) => setSolVideoUrl(e.target.value)}
+                    className="h-11 rounded-xl bg-background border-border/50 text-xs font-mono"
+                    required
+                  />
+
+                  {/* Previsualización directa del reproductor de video */}
+                  {solVideoUrl && (
+                    <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner">
+                      <iframe
+                        src={videoService.parseVideoUrl(solVideoUrl).embedUrl}
+                        title="Previsualización de Video"
+                        className="w-full h-full border-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* 3. SIMULACRO Y CONTROL FREEMIUM */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+                <div className="space-y-3 bg-muted/30 p-5 rounded-2xl border border-border/50">
+                  <h4 className="text-sm font-black text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> 3. Simulacro Oficial (PDF)
+                  </h4>
+                  <Input
+                    placeholder="URL del PDF del Simulacro"
+                    value={solSimulacroUrl}
+                    onChange={(e) => setSolSimulacroUrl(e.target.value)}
+                    className="h-11 rounded-xl bg-background border-border/50 text-xs font-mono"
+                  />
+                </div>
+
+                <div className="space-y-3 bg-muted/30 p-5 rounded-2xl border border-border/50 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-purple-400 uppercase tracking-wider mb-1">
+                      4. Configuración de Acceso Freemium
+                    </h4>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      Determina si esta edición está disponible libremente (Free) o requiere membresía Premium.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-background border border-border/50">
+                    <span className="text-xs font-bold text-foreground">
+                      {solIsFree ? "🟢 Acceso Abierto Gratuito (Plan Free)" : "🔒 Exclusivo para Alumnos Premium"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSolIsFree(!solIsFree)}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        solIsFree 
+                          ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400"
+                          : "bg-amber-500/20 border border-amber-500/40 text-amber-400"
+                      }`}
+                    >
+                      {solIsFree ? "Cambiar a Premium" : "Cambiar a Free"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón de Guardado */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
+                <a
+                  href={`/dashboard/solucionarios/${solucionarioId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold text-amber-400 hover:underline flex items-center gap-1"
+                >
+                  <Eye className="h-4 w-4" /> Probar vista de los alumnos en tiempo real
+                </a>
+
+                <Button
+                  type="submit"
+                  disabled={isSavingSol}
+                  className="w-full sm:w-auto px-8 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider gap-2 shadow-xl shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSavingSol ? "Guardando en Supabase DB..." : "Guardar Cambios en la Base de Datos"}
+                </Button>
+              </div>
+
+            </form>
+          </div>
+
+        </TabsContent>
 
         {/* ── TAB 1: USERS ─────────────────────────────────────────────────── */}
         <TabsContent value="users" className="space-y-6 animate-in fade-in duration-300">
@@ -452,13 +755,13 @@ export default function AdminDashboardPage() {
                             <div className="flex flex-wrap gap-1.5">
                               {student.subscriptions.map(sub => {
                                 const course = courses.find(c => c.id === sub.courseId)
-                                const cTitle = course?.title ? course.title.split(" ")[1] || course.title.split(" ")[0] : sub.courseId
+                                const cTitle = course?.title || sub.courseId.toUpperCase()
                                 return (
                                   <span 
                                     key={sub.courseId} 
-                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider ${
                                       sub.subscribed 
-                                        ? "bg-amber-500/10 border border-amber-500/30 text-amber-500" 
+                                        ? "bg-amber-500/10 border border-amber-500/30 text-amber-400" 
                                         : "bg-blue-500/10 border border-blue-500/30 text-blue-400"
                                     }`}
                                   >
@@ -1085,14 +1388,48 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
 
-                    {/* File / Link URL */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Ruta / URL de Descarga</label>
+                    {/* File / Link URL with Supabase Storage File Selector */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-black uppercase tracking-wider text-muted-foreground flex justify-between items-center">
+                        <span>Archivo PDF o URL de Descarga</span>
+                        <span className="text-[10px] text-amber-500 font-bold">☁️ Supabase Storage Activado</span>
+                      </label>
+
+                      {/* Selector directo de archivos PDF desde la computadora */}
+                      <div className="border-2 border-dashed border-primary/30 rounded-2xl p-4 bg-primary/5 hover:bg-primary/10 transition-colors text-center cursor-pointer relative group">
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            try {
+                              setNewMaterialTitle(file.name.replace(/\.[^/.]+$/, ""))
+                              setNewMaterialSize(storageService.formatBytes(file.size))
+                              
+                              const res = await storageService.uploadMaterialPDF(file, selectedCourseId)
+                              setNewMaterialUrl(res.url)
+                            } catch (err: any) {
+                              alert(err.message || "Error al subir PDF a Supabase Storage.")
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs font-black text-primary uppercase tracking-wider">
+                            📂 Clic para Seleccionar o Arrastrar PDF aquí
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-semibold">
+                            Sube el PDF a Supabase Storage automáticamente
+                          </span>
+                        </div>
+                      </div>
+
                       <Input
-                        placeholder="Ej. /materials/ficha1.pdf"
+                        placeholder="URL del archivo (Ej. https://.../materials/doc.pdf)"
                         value={newMaterialUrl}
                         onChange={(e) => setNewMaterialUrl(e.target.value)}
-                        className="h-12 rounded-xl bg-muted/50 border-none px-4 text-xs font-mono"
+                        className="h-11 rounded-xl bg-muted/50 border-none px-4 text-xs font-mono"
                         required
                       />
                     </div>
@@ -1167,5 +1504,13 @@ export default function AdminDashboardPage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-[#94a3b8] font-bold">Cargando panel de administración...</div>}>
+      <AdminDashboardContent />
+    </Suspense>
   )
 }

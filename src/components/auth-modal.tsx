@@ -36,6 +36,7 @@ export function AuthModal({
   const [school, setSchool] = useState("")
   const [schoolType, setSchoolType] = useState("")
   const [grade, setGrade] = useState("")
+  const [country, setCountry] = useState("peru")
   const [department, setDepartment] = useState("")
   const [district, setDistrict] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -86,6 +87,7 @@ export function AuthModal({
         school,
         schoolType,
         grade,
+        country,
         department,
         district
       })
@@ -240,40 +242,70 @@ export function AuthModal({
                       required
                     >
                       <option value="" disabled>Seleccione el grado*</option>
-                      <option value="3pri">3ero Primaria</option>
-                      <option value="4pri">4to Primaria</option>
-                      <option value="5pri">5to Primaria</option>
-                      <option value="6pri">6to Primaria</option>
-                      <option value="1sec">1ro Secundaria</option>
-                      <option value="2sec">2do Secundaria</option>
-                      <option value="3sec">3ro Secundaria</option>
-                      <option value="4sec">4to Secundaria</option>
-                      <option value="5sec">5to Secundaria</option>
-                      <option value="pre">Postulo, soy Pre-universitario</option>
-                      <option value="uni">Soy universitario</option>
+                      <optgroup label="Inicial" className="bg-popover text-popover-foreground font-semibold">
+                        <option value="3ini" className="bg-popover text-popover-foreground">3 años Inicial</option>
+                        <option value="4ini" className="bg-popover text-popover-foreground">4 años Inicial</option>
+                        <option value="5ini" className="bg-popover text-popover-foreground">5 años Inicial</option>
+                      </optgroup>
+                      <optgroup label="Primaria" className="bg-popover text-popover-foreground font-semibold">
+                        <option value="1pri" className="bg-popover text-popover-foreground">1ro Primaria</option>
+                        <option value="2pri" className="bg-popover text-popover-foreground">2do Primaria</option>
+                        <option value="3pri" className="bg-popover text-popover-foreground">3ero Primaria</option>
+                        <option value="4pri" className="bg-popover text-popover-foreground">4to Primaria</option>
+                        <option value="5pri" className="bg-popover text-popover-foreground">5to Primaria</option>
+                        <option value="6pri" className="bg-popover text-popover-foreground">6to Primaria</option>
+                      </optgroup>
+                      <optgroup label="Secundaria" className="bg-popover text-popover-foreground font-semibold">
+                        <option value="1sec" className="bg-popover text-popover-foreground">1ro Secundaria</option>
+                        <option value="2sec" className="bg-popover text-popover-foreground">2do Secundaria</option>
+                        <option value="3sec" className="bg-popover text-popover-foreground">3ro Secundaria</option>
+                        <option value="4sec" className="bg-popover text-popover-foreground">4to Secundaria</option>
+                        <option value="5sec" className="bg-popover text-popover-foreground">5to Secundaria</option>
+                      </optgroup>
                     </select>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <select
-                        className="h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground appearance-none cursor-pointer outline-none"
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        required
-                      >
-                        <option value="" disabled>Departamento*</option>
-                        {departamentosPeru.map(dept => (
-                          <option key={dept} value={dept.toLowerCase()}>{dept}</option>
-                        ))}
-                        <option value="fuera_peru">No me encuentro en Perú</option>
-                      </select>
-                      <Input
-                        placeholder="Distrito*"
-                        className="h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        required
-                      />
-                    </div>
+                    <select
+                      className="w-full h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground appearance-none cursor-pointer outline-none"
+                      value={country}
+                      onChange={(e) => {
+                        const newCountry = e.target.value
+                        setCountry(newCountry)
+                        setDepartment("")
+                        setDistrict("")
+                      }}
+                      required
+                    >
+                      <option value="" disabled>País*</option>
+                      <option value="peru" className="bg-popover text-popover-foreground">Perú</option>
+                      <option value="mexico" className="bg-popover text-popover-foreground">México</option>
+                      <option value="bolivia" className="bg-popover text-popover-foreground">Bolivia</option>
+                      <option value="colombia" className="bg-popover text-popover-foreground">Colombia</option>
+                      <option value="ecuador" className="bg-popover text-popover-foreground">Ecuador</option>
+                      <option value="otro" className="bg-popover text-popover-foreground">Otro país</option>
+                    </select>
+
+                    {country.trim().toLowerCase() === "peru" ? (
+                      <div key={`location-peru-${country}`} className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <select
+                          className="h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground appearance-none cursor-pointer outline-none"
+                          value={department}
+                          onChange={(e) => setDepartment(e.target.value)}
+                          required
+                        >
+                          <option value="" disabled>Departamento*</option>
+                          {departamentosPeru.map(dept => (
+                            <option key={dept} value={dept.toLowerCase()} className="bg-popover text-popover-foreground">{dept}</option>
+                          ))}
+                        </select>
+                        <Input
+                          placeholder="Distrito*"
+                          className="h-12 rounded-2xl bg-muted border-none px-6 focus-visible:ring-primary/20 text-foreground placeholder:text-muted-foreground"
+                          value={district}
+                          onChange={(e) => setDistrict(e.target.value)}
+                          required
+                        />
+                      </div>
+                    ) : null}
                   </>
                 )}
 

@@ -62,6 +62,13 @@
   ],
   "solucionarios": [
     {
+      "id": "concurso_matematica_binaria",
+      "title": "Concurso Nacional de Matemática Binaria (CMB)",
+      "logos": ["/assets/logos/programas/concurso_matematica_binaria.png"],
+      "banners": ["/assets/banners/programas/concurso_matematica_binaria-general.png"],
+      "accentColor": "#059669"
+    },
+    {
       "id": "olimpiada_logical",
       "title": "Olimpiada Matemática de Logical",
       "logos": ["/assets/logos/solucionarios/olimpiada_logical.png"],

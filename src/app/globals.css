@@ -111,5 +111,11 @@
 }
 
 .animate-infinite-scroll {
-  animation: infinite-scroll 40s linear infinite;
+  animation: infinite-scroll 80s linear infinite;
+}
+
+.animate-infinite-scroll:hover,
+.animate-infinite-scroll:focus-within,
+.animate-infinite-scroll:has(*:hover) {
+  animation-play-state: paused !important;
 }

@@ -304,5 +304,62 @@ Actualmente estoy visualizando el contenido gratuito y deseo desbloquear todos l
       return true;
     }
     return false;
+  },
+
+  /**
+   * Obtener recursos asignados por el administrador para una edición (Año + Nivel)
+   */
+  getSolucionarioYearResource(solucionarioId: string, nivelId: string, year: number): SolucionarioYearResource | null {
+    if (typeof window === "undefined") return null;
+    try {
+      const key = `sol_resource_${solucionarioId}_${nivelId}_${year}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Error leyendo recursos de solucionario:", e);
+    }
+    return null;
+  },
+
+  /**
+   * Guardar o actualizar recursos de un Año + Nivel en un Solucionario (CRUD Admin)
+   */
+  saveSolucionarioYearResource(resource: SolucionarioYearResource): void {
+    if (typeof window === "undefined") return;
+    try {
+      const key = `sol_resource_${resource.solucionarioId}_${resource.nivelId}_${resource.year}`;
+      localStorage.setItem(key, JSON.stringify(resource));
+    } catch (e) {
+      console.error("Error guardando recursos de solucionario:", e);
+    }
+  },
+
+  /**
+   * Eliminar recursos asignados a un Año + Nivel
+   */
+  deleteSolucionarioYearResource(solucionarioId: string, nivelId: string, year: number): void {
+    if (typeof window === "undefined") return;
+    try {
+      const key = `sol_resource_${solucionarioId}_${nivelId}_${year}`;
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.error("Error eliminando recursos de solucionario:", e);
+    }
   }
 };
+
+export interface SolucionarioYearResource {
+  solucionarioId: string;
+  nivelId: string;
+  year: number;
+  pdfUrl?: string;
+  pdfTitle?: string;
+  videoUrl?: string;
+  videoTitle?: string;
+  simulacroUrl?: string;
+  simulacroTitle?: string;
+  isFree?: boolean;
+}
+

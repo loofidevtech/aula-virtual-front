@@ -1,36 +1,46 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { 
   LayoutDashboard, 
   Users, 
   BookOpen, 
-  Settings, 
   LogOut,
   Gamepad2,
   Video,
-  FileText
+  FileText,
+  GraduationCap
 } from "lucide-react"
 import Image from "next/image"
+import { Suspense } from "react"
 
-export function AdminSidebar() {
+function SidebarContent() {
   const pathname = usePathname()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const currentTab = searchParams.get("tab") || (pathname === "/admin/dashboard" ? "users" : "")
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: Users, label: "Usuarios y Suscripciones", href: "/admin/dashboard?tab=users" },
-    { icon: BookOpen, label: "Gestión de Cursos", href: "/admin/dashboard?tab=courses" },
-    { icon: FileText, label: "Gestionar Material", href: "/admin/dashboard?tab=materials" },
-    { icon: Video, label: "Gestión de Videos", href: "/admin/dashboard?tab=videos" },
-    { icon: Gamepad2, label: "Juegos Interactivos", href: "/admin/dashboard?tab=games" },
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", tab: "users", href: "/admin/dashboard?tab=users" },
+    { id: "users", icon: Users, label: "Usuarios y Suscripciones", tab: "users", href: "/admin/dashboard?tab=users" },
+    { id: "solucionarios", icon: GraduationCap, label: "Gestión de Solucionarios", tab: "solucionarios", href: "/admin/dashboard?tab=solucionarios" },
+    { id: "courses", icon: BookOpen, label: "Gestión de Cursos", tab: "courses", href: "/admin/dashboard?tab=courses" },
+    { id: "materials", icon: FileText, label: "Gestionar Material PDF", tab: "materials", href: "/admin/dashboard?tab=materials" },
+    { id: "videos", icon: Video, label: "Gestión de Videos", tab: "videos", href: "/admin/dashboard?tab=videos" },
+    { id: "games", icon: Gamepad2, label: "Juegos Interactivos", tab: "games", href: "/admin/dashboard?tab=games" },
   ]
 
   const handleLogout = () => {
     sessionStorage.removeItem("adminUser")
     localStorage.removeItem("currentUser")
     router.push("/admin/login")
+  }
+
+  const handleNavigate = (e: React.MouseEvent, href: string) => {
+    e.preventDefault()
+    router.push(href)
   }
 
   return (
@@ -64,13 +74,14 @@ export function AdminSidebar() {
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4 px-2">Menú Principal</p>
         
         {menuItems.map((item) => {
-          const isActive = pathname === item.href || (pathname === "/admin/dashboard" && item.href.includes("?tab=") === false) // Simplificación para demo
+          const isActive = currentTab === item.tab || (item.id === "dashboard" && currentTab === "users")
           
           return (
-            <Link
+            <a
               key={item.label}
               href={item.href}
-              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-bold transition-all duration-300 relative group ${
+              onClick={(e) => handleNavigate(e, item.href)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-bold transition-all duration-300 relative group cursor-pointer ${
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -79,7 +90,7 @@ export function AdminSidebar() {
               <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground transition-colors"}`} />
               {item.label}
               {isActive && <div className="absolute right-3 h-4 w-1 rounded-full bg-primary" />}
-            </Link>
+            </a>
           )
         })}
       </nav>
@@ -88,12 +99,20 @@ export function AdminSidebar() {
       <div className="p-4 border-t border-border/50">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
         >
           <LogOut className="h-4 w-4" />
           Cerrar Sesión
         </button>
       </div>
     </aside>
+  )
+}
+
+export function AdminSidebar() {
+  return (
+    <Suspense fallback={<div className="fixed left-0 top-0 h-screen w-[260px] bg-card border-r border-border/50" />}>
+      <SidebarContent />
+    </Suspense>
   )
 }

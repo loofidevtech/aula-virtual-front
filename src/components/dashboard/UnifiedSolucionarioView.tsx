@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { 
   FileText, 
@@ -8,8 +9,19 @@ import {
   GraduationCap,
   Folder,
   Target,
-  Trophy
+  Trophy,
+  Lock,
+  Sparkles,
+  MessageCircle,
+  ShieldCheck,
+  X,
+  Download,
+  Film
 } from "lucide-react"
+import { freemiumService } from "@/lib/freemium-service"
+import { videoService } from "@/lib/video-service"
+import { LockModal } from "@/components/lock-modal"
+import { Button } from "@/components/ui/button"
 
 interface Level {
   id: string
@@ -107,6 +119,28 @@ const DEFAULT_COLORS = {
 }
 
 const SOLUCIONARIOS_CONFIG: Record<string, SolucionarioConfig> = {
+  cmb: {
+    title: "Concurso Nacional de Matemática Binaria (CMB)",
+    description: "Solucionario oficial y exámenes resueltos por nivel, año y etapa.",
+    levels: [
+      { id: "1", name: "Nivel 1", desc: "Estudiantes de 1.º y 2.º de secundaria", color: "green" },
+      { id: "2", name: "Nivel 2", desc: "Estudiantes de 3.º y 4.º de secundaria", color: "blue" },
+      { id: "3", name: "Nivel 3", desc: "Estudiantes de 5.º de secundaria", color: "amber" }
+    ],
+    years: [2023, 2024, 2025, 2026],
+    getStages: (year) => year === 2023 ? ["Etapa única"] : ["Etapa eliminatoria", "Fase nacional"]
+  },
+  concurso_matematica_binaria: {
+    title: "Concurso Nacional de Matemática Binaria (CMB)",
+    description: "Solucionario oficial y exámenes resueltos por nivel, año y etapa.",
+    levels: [
+      { id: "1", name: "Nivel 1", desc: "Estudiantes de 1.º y 2.º de secundaria", color: "green" },
+      { id: "2", name: "Nivel 2", desc: "Estudiantes de 3.º y 4.º de secundaria", color: "blue" },
+      { id: "3", name: "Nivel 3", desc: "Estudiantes de 5.º de secundaria", color: "amber" }
+    ],
+    years: [2023, 2024, 2025, 2026],
+    getStages: (year) => year === 2023 ? ["Etapa única"] : ["Etapa eliminatoria", "Fase nacional"]
+  },
   selectivo_onem: {
     title: "Concurso Selectivo ONEM",
     description: "Estructura de recursos por nivel, año y etapa",
@@ -290,6 +324,23 @@ const SOLUCIONARIOS_CONFIG: Record<string, SolucionarioConfig> = {
 }
 
 export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: string }) {
+  const [currentUser, setCurrentUser] = useState<{ name: string; email?: string; role?: string } | null>(null)
+  const [isPremiumUser, setIsPremiumUser] = useState(false)
+  const [isLockModalOpen, setIsLockModalOpen] = useState(false)
+  const [selectedLockInfo, setSelectedLockInfo] = useState<{ levelName: string; year: number }>({ levelName: "", year: 2026 })
+  
+  // Dynamic PDF and Video Modal Viewers
+  const [activePdf, setActivePdf] = useState<{ title: string; url: string } | null>(null)
+  const [activeVideo, setActiveVideo] = useState<{ title: string; url: string } | null>(null)
+
+  useEffect(() => {
+    const user = freemiumService.getCurrentUser()
+    setCurrentUser(user)
+    const enrollment = freemiumService.getEnrollmentStatus(id)
+    const isPremium = user?.role === "admin" || enrollment === "premium"
+    setIsPremiumUser(isPremium)
+  }, [id])
+
   // Obtener configuración para este ID
   const config = SOLUCIONARIOS_CONFIG[id] || SOLUCIONARIOS_CONFIG.selectivo_onem
   const finalLogo = logo || "/logo_principal.png"
@@ -298,6 +349,25 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
   const titleWords = config.title.split(" ")
   const lastWord = titleWords.pop() || ""
   const prefixTitle = titleWords.join(" ")
+
+  // Handler para clicks en elementos bloqueados
+  const handleLockedClick = (levelName: string, year: number) => {
+    setSelectedLockInfo({ levelName, year })
+    setIsLockModalOpen(true)
+  }
+
+  // Generador de enlace directo a WhatsApp para desbloquear
+  const getDirectWhatsAppUrl = (levelName: string, year: number) => {
+    const activeName = currentUser?.name || "Alumno"
+    const activeEmail = currentUser?.email || "No registrado"
+    return freemiumService.generateWhatsAppUrl(
+      activeName,
+      activeEmail,
+      config.title,
+      levelName,
+      `Edición ${year}`
+    )
+  }
 
   // Determinar cuántas columnas usar en el grid de niveles
   const gridColsClass = 
@@ -328,6 +398,18 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
 
         {/* Título y descripción */}
         <div className="relative z-10 space-y-2 flex-1 text-center md:text-left">
+          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start mb-1">
+            {isPremiumUser ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-500 text-xs font-black uppercase tracking-wider">
+                <Sparkles className="h-3.5 w-3.5 fill-current" /> Acceso Premium Ilimitado
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 text-xs font-black uppercase tracking-wider">
+                <Lock className="h-3.5 w-3.5" /> Plan Free (Acceso al 1° elemento de cada nivel)
+              </span>
+            )}
+          </div>
+
           <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tight uppercase leading-none">
             {prefixTitle}{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
@@ -339,6 +421,37 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
           </p>
         </div>
       </div>
+
+      {/* FREEMIUM INFORMATION BANNER (Si el usuario es FREE) */}
+      {!isPremiumUser && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-primary/10 to-purple-600/10 border border-amber-500/30 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg">
+          <div className="flex items-center gap-4 text-left">
+            <div className="h-12 w-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-500 shadow-inner">
+              <Lock className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+                Modo Alumno Gratuito (Free)
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 uppercase">
+                  Acceso Parcial
+                </span>
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                Tienes disponible el <strong className="text-foreground">primer contenido de cada nivel</strong>. Los demás botones están bloqueados (🔒).
+              </p>
+            </div>
+          </div>
+
+          <Button
+            size="lg"
+            className="w-full md:w-auto h-12 rounded-2xl bg-[#25D366] hover:bg-[#1ebd59] text-white font-black text-xs uppercase tracking-wider gap-2 shadow-lg shadow-emerald-500/20 shrink-0 cursor-pointer"
+            onClick={() => window.open(getDirectWhatsAppUrl("General", 2026), "_blank")}
+          >
+            <MessageCircle className="h-4 w-4 fill-current" />
+            Desbloquear acceso Premium en WhatsApp
+          </Button>
+        </div>
+      )}
 
       {/* GRID DE NIVELES (Estructura ONEM) */}
       <div className={`grid ${gridColsClass} gap-6`}>
@@ -367,82 +480,173 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
 
               {/* Lista de Años dentro del Nivel */}
               <div className="flex-1 flex flex-col divide-y divide-border/50 p-4 gap-4">
-                {config.years.map((year) => {
+                {config.years.map((year, yearIndex) => {
                   const stages = config.getStages(year)
+                  // REGLA FREEMIUM: El usuario Premium o Admin ve todo. El usuario Free SOLO ve el primer año (yearIndex === 0)
+                  const isUnlocked = isPremiumUser || yearIndex === 0
+
                   return (
                     <div key={year} className="pt-4 first:pt-0">
                       {stages.length === 1 ? (
                         
-                        // Diseño de Etapa Única (Año 2023 en ONEM)
-                        <div className="flex items-center gap-4 bg-background/50 rounded-2xl p-4 border border-border/50 shadow-sm hover:shadow-md transition-all">
+                        // Diseño de Etapa Única
+                        <div 
+                          className={`flex items-center gap-4 rounded-2xl p-4 border transition-all relative ${
+                            isUnlocked 
+                              ? "bg-background/50 border-border/50 shadow-sm hover:shadow-md" 
+                              : "bg-background/20 border-slate-700/50 opacity-85 hover:opacity-100 bg-stripes"
+                          }`}
+                        >
                           <div className="w-24 text-center shrink-0 flex flex-col items-center justify-center gap-1.5">
-                            <span className={`text-2xl font-black ${colors.textColor}`}>
+                            <span className={`text-2xl font-black ${isUnlocked ? colors.textColor : "text-muted-foreground"}`}>
                               {year}
                             </span>
-                            <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${colors.lightBg} ${colors.textColor} whitespace-nowrap`}>
+                            <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isUnlocked ? colors.lightBg + " " + colors.textColor : "bg-muted text-muted-foreground"} whitespace-nowrap`}>
                               {stages[0]}
                             </span>
                           </div>
                           
                           <div className="flex-1 flex justify-around items-center gap-2">
-                            <button className="flex flex-col items-center gap-1 group w-1/3">
-                              <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <FileText className={`h-4 w-4 ${colors.textColor}`} />
-                              </div>
-                              <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                Examen
-                              </span>
-                            </button>
-                            <button className="flex flex-col items-center gap-1 group w-1/3">
-                              <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <PlayCircle className={`h-4 w-4 ${colors.textColor}`} />
-                              </div>
-                              <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                Video
-                              </span>
-                            </button>
-                            <button className="flex flex-col items-center gap-1 group w-1/3">
-                              <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <ClipboardCheck className={`h-4 w-4 ${colors.textColor}`} />
-                              </div>
-                              <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                Simulacro
-                              </span>
-                            </button>
+                            {(() => {
+                              const customResource = freemiumService.getSolucionarioYearResource(id, nivel.id, year)
+                              const realPdfUrl = customResource?.pdfUrl || `/materials/solucionario_${year}.pdf`
+                              const realVideoUrl = customResource?.videoUrl || `https://www.youtube.com/embed/dQw4w9WgXcQ`
+                              const realSimulacroUrl = customResource?.simulacroUrl || `/materials/simulacro_${year}.pdf`
+
+                              return isUnlocked ? (
+                                <>
+                                  <button 
+                                    onClick={() => setActivePdf({ 
+                                      title: customResource?.pdfTitle || `${config.title} (${year}) — ${nivel.name} Examen Resuelto`, 
+                                      url: realPdfUrl 
+                                    })}
+                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
+                                  >
+                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                      <FileText className={`h-4 w-4 ${colors.textColor}`} />
+                                    </div>
+                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
+                                      Examen PDF
+                                    </span>
+                                  </button>
+
+                                  <button 
+                                    onClick={() => setActiveVideo({ 
+                                      title: customResource?.videoTitle || `${config.title} (${year}) — ${nivel.name} Resolución en Video`, 
+                                      url: realVideoUrl 
+                                    })}
+                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
+                                  >
+                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                      <PlayCircle className={`h-4 w-4 ${colors.textColor}`} />
+                                    </div>
+                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
+                                      Video Explicativo
+                                    </span>
+                                  </button>
+
+                                  <button 
+                                    onClick={() => setActivePdf({ 
+                                      title: customResource?.simulacroTitle || `${config.title} (${year}) — ${nivel.name} Simulacro Oficial`, 
+                                      url: realSimulacroUrl 
+                                    })}
+                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
+                                  >
+                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                      <ClipboardCheck className={`h-4 w-4 ${colors.textColor}`} />
+                                    </div>
+                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
+                                      Simulacro
+                                    </span>
+                                  </button>
+                                </>
+                              ) : (
+                                // BLOQUEADO PARA ALUMNO FREE
+                                <div className="flex items-center justify-between w-full gap-2 pl-2">
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
+                                    <Lock className="h-3 w-3" /> Bloqueado (Free)
+                                  </span>
+
+                                  <button
+                                    onClick={() => handleLockedClick(nivel.name, year)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0"
+                                  >
+                                    <Lock className="h-3 w-3" />
+                                    Desbloquear acceso
+                                  </button>
+                                </div>
+                              )
+                            })()}
                           </div>
                         </div>
                       ) : (
                         
-                        // Diseño de Varias Etapas (Año 2024+ en ONEM)
-                        <div className="flex flex-col md:flex-row items-center gap-3 bg-background/50 rounded-2xl p-4 border border-border/50 shadow-sm hover:shadow-md transition-all">
-                          <div className="w-16 md:w-20 text-center shrink-0 md:border-r border-border/50 py-1">
-                            <span className={`text-2xl font-black ${colors.textColor}`}>
+                        // Diseño de Varias Etapas
+                        <div 
+                          className={`flex flex-col md:flex-row items-center gap-3 rounded-2xl p-4 border transition-all ${
+                            isUnlocked 
+                              ? "bg-background/50 border-border/50 shadow-sm hover:shadow-md" 
+                              : "bg-background/20 border-slate-700/50 opacity-85 hover:opacity-100"
+                          }`}
+                        >
+                          <div className="w-16 md:w-20 text-center shrink-0 md:border-r border-border/50 py-1 flex flex-col items-center justify-center">
+                            <span className={`text-2xl font-black ${isUnlocked ? colors.textColor : "text-muted-foreground"}`}>
                               {year}
                             </span>
+                            {!isUnlocked && (
+                              <span className="inline-flex items-center gap-0.5 text-[8px] font-black text-amber-500 mt-0.5">
+                                <Lock className="h-2.5 w-2.5" /> Bloqueado
+                              </span>
+                            )}
                           </div>
                           
-                          <div className="flex-1 flex gap-2 md:gap-4 divide-x divide-border/50 w-full">
+                          <div className="flex-1 flex gap-2 md:gap-4 divide-x divide-border/50 w-full items-center">
                             {stages.map((stageName, sIndex) => (
                               <div 
                                 key={stageName} 
                                 className={`flex-1 flex flex-col items-center gap-2 ${sIndex > 0 ? "pl-2 md:pl-4" : ""}`}
                               >
-                                <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${colors.lightBg} ${colors.textColor} whitespace-nowrap text-center`}>
+                                <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${isUnlocked ? colors.lightBg + " " + colors.textColor : "bg-muted text-muted-foreground"} whitespace-nowrap text-center`}>
                                   {stageName}
                                 </span>
+                                
                                 <div className="flex justify-around items-center w-full max-w-[120px] mt-1">
-                                  <button className="group p-1" title="Examen oficial">
-                                    <FileText className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
-                                  </button>
-                                  <button className="group p-1" title="Solución en video">
-                                    <PlayCircle className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
-                                  </button>
-                                  <button className="group p-1" title="Examen simulacro">
-                                    <ClipboardCheck className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
-                                  </button>
+                                  {isUnlocked ? (
+                                    <>
+                                      <button className="group p-1 cursor-pointer" title="Examen oficial">
+                                        <FileText className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      </button>
+                                      <button className="group p-1 cursor-pointer" title="Solución en video">
+                                        <PlayCircle className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      </button>
+                                      <button className="group p-1 cursor-pointer" title="Examen simulacro">
+                                        <ClipboardCheck className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button 
+                                      onClick={() => handleLockedClick(nivel.name, year)}
+                                      className="p-1 text-amber-500 hover:scale-110 transition-transform cursor-pointer" 
+                                      title="Desbloquear acceso en WhatsApp"
+                                    >
+                                      <Lock className="h-4 w-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             ))}
+
+                            {!isUnlocked && (
+                              <div className="pl-2 shrink-0 hidden md:block">
+                                <button
+                                  onClick={() => handleLockedClick(nivel.name, year)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[9px] font-black uppercase tracking-wider hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+                                >
+                                  <Lock className="h-3 w-3" />
+                                  Desbloquear
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -454,6 +658,17 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
           )
         })}
       </div>
+
+      {/* LOCK MODAL PARA ALUMNO FREE */}
+      <LockModal
+        isOpen={isLockModalOpen}
+        onClose={() => setIsLockModalOpen(false)}
+        courseName={config.title}
+        userName={currentUser?.name}
+        userEmail={currentUser?.email}
+        moduleName={selectedLockInfo.levelName}
+        videoTitle={`Edición ${selectedLockInfo.year}`}
+      />
 
       {/* FOOTER INFO BLOCKS (Estructura ONEM) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
@@ -494,6 +709,109 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
         </div>
       </div>
 
+      {/* ── MODAL REPRODUCTOR DE VIDEO ── */}
+      {activeVideo && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0b132b] border border-white/15 rounded-3xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.95)]">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-900/80">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Film className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm md:text-base font-black text-white truncate max-w-md">
+                  {activeVideo.title}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setActiveVideo(null)}
+                className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="relative w-full aspect-video bg-black flex items-center justify-center">
+              <iframe
+                src={videoService.parseVideoUrl(activeVideo.url).embedUrl}
+                title={activeVideo.title}
+                className="w-full h-full border-none"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL VISOR DE PDF Y DESCARGA ── */}
+      {activePdf && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div className="relative w-full max-w-4xl h-[85vh] flex flex-col bg-[#0b132b] border border-white/15 rounded-3xl overflow-hidden shadow-[0_30px_90px_rgba(0,0,0,0.95)]">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-900/80">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <h3 className="text-sm md:text-base font-black text-white truncate max-w-md">
+                  {activePdf.title}
+                </h3>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <a
+                  href={activePdf.url}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-black uppercase tracking-wider hover:bg-primary/90 transition-colors"
+                >
+                  <Download className="h-4 w-4" /> Descargar PDF
+                </a>
+                <button 
+                  onClick={() => setActivePdf(null)}
+                  className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                <FileText className="h-8 w-8 animate-pulse" />
+              </div>
+              <div className="space-y-1 max-w-md">
+                <h4 className="text-lg font-black text-white">{activePdf.title}</h4>
+                <p className="text-xs text-slate-400">
+                  Documento PDF listo para lectura online y descarga oficial.
+                </p>
+              </div>
+              
+              <div className="pt-4 flex flex-wrap gap-3 justify-center">
+                <a
+                  href={activePdf.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-all"
+                >
+                  Abrir PDF en pantalla completa
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lock modal for freemium users */}
+      <LockModal
+        isOpen={isLockModalOpen}
+        onClose={() => setIsLockModalOpen(false)}
+        courseName={config.title}
+        moduleName={selectedLockInfo.levelName}
+        videoTitle={`Edición ${selectedLockInfo.year}`}
+      />
+
     </div>
   )
 }
+
