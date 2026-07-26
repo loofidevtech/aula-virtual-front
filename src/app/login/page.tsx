@@ -59,6 +59,7 @@ export default function LoginPage() {
         const isSystemAdmin = loggedUser.email === "admin@albert.com" || loggedUser.user_metadata?.rol === "ADMIN" || loggedUser.email.includes("admin")
         
         localStorage.setItem("currentUser", JSON.stringify({
+          id: loggedUser.id,
           name: loggedUser.user_metadata?.full_name || "Estudiante",
           email: loggedUser.email,
           role: isSystemAdmin ? "admin" : "student"

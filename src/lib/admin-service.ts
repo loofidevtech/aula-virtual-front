@@ -152,15 +152,8 @@ export const adminService = {
   async login(email: string, password: string): Promise<AdminUser | null> {
     try {
       const cleanEmail = email.trim().toLowerCase()
-      if (cleanEmail === "admin@albert.com" && password === "admin123") {
-        return {
-          id: "admin_default",
-          name: "Administrador Principal",
-          email: "admin@albert.com",
-          role: "admin"
-        }
-      }
 
+      // Autenticación REAL con Supabase Auth — genera JWT válido para Storage uploads
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password,
@@ -169,16 +162,19 @@ export const adminService = {
       if (!error && data?.user) {
         return {
           id: data.user.id,
-          name: data.user.user_metadata?.full_name || "Administrador Principal",
+          name: data.user.user_metadata?.full_name || "Administrador",
           email: data.user.email || cleanEmail,
           role: "admin"
         }
       }
 
-      if (cleanEmail.includes("admin") && password === "admin123") {
+      // Fallback solo para desarrollo local sin cuenta Supabase
+      if (process.env.NODE_ENV === "development" &&
+          cleanEmail === "admin@albert.com" && password === "admin123") {
+        console.warn("[AdminService] Usando login de desarrollo — Storage no funcionará sin sesión real.")
         return {
           id: "admin_default",
-          name: "Administrador Principal",
+          name: "Administrador (Dev)",
           email: cleanEmail,
           role: "admin"
         }

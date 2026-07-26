@@ -1,6 +1,7 @@
 // src/lib/freemium-service.ts
 
 export interface UserProfile {
+  id?: string;
   name: string;
   email?: string;
   role?: "student" | "admin";
@@ -37,6 +38,7 @@ export const freemiumService = {
       if (userStr) {
         const parsed = JSON.parse(userStr);
         return {
+          id: parsed.id || undefined,
           name: parsed.name || "Usuario",
           email: parsed.email || undefined,
           role: parsed.role || "student",
@@ -46,7 +48,7 @@ export const freemiumService = {
       console.error("Error reading user from localStorage:", e);
     }
     // Return mock active user
-    return { name: "Adrian M.", email: "adrian@ejemplo.com", role: "student" };
+    return { id: "e1111111-1111-1111-1111-111111111111", name: "Adrian M.", email: "adrian@ejemplo.com", role: "student" };
   },
 
   /**

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { 
   FileText, 
@@ -20,8 +20,10 @@ import {
 } from "lucide-react"
 import { freemiumService } from "@/lib/freemium-service"
 import { videoService } from "@/lib/video-service"
+import { solucionarioService, type SolucionarioResource } from "@/lib/solucionario-service"
 import { LockModal } from "@/components/lock-modal"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 interface Level {
   id: string
@@ -332,6 +334,33 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
   // Dynamic PDF and Video Modal Viewers
   const [activePdf, setActivePdf] = useState<{ title: string; url: string } | null>(null)
   const [activeVideo, setActiveVideo] = useState<{ title: string; url: string } | null>(null)
+  // Clave del botón que está cargando (nivelId_year_tipo)
+  const [loadingKey, setLoadingKey] = useState<string | null>(null)
+
+  // Cache de recursos de Supabase: clave = `${nivelId}_${year}`
+  // Solo se cachea si el recurso existe (no null), para que el alumno
+  // vea los PDFs aunque los suba el admin despues de que la pagina cargue.
+  const resourcesCacheRef = useRef<Record<string, SolucionarioResource>>({})
+
+  /**
+   * Obtiene el recurso desde Supabase con cache en memoria.
+   * Los resultados null NO se cachean para forzar un re-fetch en el siguiente clic.
+   */
+  const fetchResource = useCallback(
+    async (nivelId: string, year: number): Promise<SolucionarioResource | null> => {
+      const cacheKey = `${nivelId}_${year}`
+      if (resourcesCacheRef.current[cacheKey]) {
+        return resourcesCacheRef.current[cacheKey]
+      }
+      const resource = await solucionarioService.getResource(id, nivelId, year)
+      // Solo cachear si existe un recurso real
+      if (resource) {
+        resourcesCacheRef.current[cacheKey] = resource
+      }
+      return resource
+    },
+    [id]
+  )
 
   useEffect(() => {
     const user = freemiumService.getCurrentUser()
@@ -339,7 +368,34 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
     const enrollment = freemiumService.getEnrollmentStatus(id)
     const isPremium = user?.role === "admin" || enrollment === "premium"
     setIsPremiumUser(isPremium)
+    // Limpiar caché al cambiar de solucionario
+    resourcesCacheRef.current = {}
   }, [id])
+
+  /**
+   * Convierte cualquier URL de Google Drive al formato de descarga directa.
+   * Otros URLs se devuelven sin cambios.
+   * Ejemplos:
+   *   https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+   *   → https://drive.google.com/uc?export=download&id=FILE_ID
+   */
+  const resolvePdfUrl = (url: string): string => {
+    if (!url) return url
+    // Detectar Google Drive /file/d/ID/view o /file/d/ID/preview
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+    if (driveMatch) {
+      const fileId = driveMatch[1]
+      return `https://drive.google.com/uc?export=download&id=${fileId}`
+    }
+    // Detectar Google Drive /open?id=ID
+    const openMatch = url.match(/drive\.google\.com\/open\?id=([^&]+)/)
+    if (openMatch) {
+      return `https://drive.google.com/uc?export=download&id=${openMatch[1]}`
+    }
+    return url
+  }
+
+
 
   // Obtener configuración para este ID
   const config = SOLUCIONARIOS_CONFIG[id] || SOLUCIONARIOS_CONFIG.selectivo_onem
@@ -507,61 +563,88 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
                           </div>
                           
                           <div className="flex-1 flex justify-around items-center gap-2">
-                            {(() => {
-                              const customResource = freemiumService.getSolucionarioYearResource(id, nivel.id, year)
-                              const realPdfUrl = customResource?.pdfUrl || `/materials/solucionario_${year}.pdf`
-                              const realVideoUrl = customResource?.videoUrl || `https://www.youtube.com/embed/dQw4w9WgXcQ`
-                              const realSimulacroUrl = customResource?.simulacroUrl || `/materials/simulacro_${year}.pdf`
+                            {isUnlocked ? (
+                              <>
+                                {/* Examen PDF */}
+                                <button
+                                  disabled={loadingKey === `${nivel.id}_${year}_pdf`}
+                                  onClick={async () => {
+                                    const key = `${nivel.id}_${year}_pdf`
+                                    setLoadingKey(key)
+                                    const res = await fetchResource(nivel.id, year)
+                                    setLoadingKey(null)
+                                    const rawUrl = res?.pdf_url || ""
+                                    const title = res?.pdf_title || `${config.title} (${year}) — ${nivel.name} Examen Resuelto`
+                                    if (rawUrl) {
+                                      setActivePdf({ title, url: resolvePdfUrl(rawUrl) })
+                                    } else {
+                                      toast.info("Aún no hay examen PDF para esta edición.", { duration: 4000 })
+                                    }
+                                  }}
+                                  className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer disabled:opacity-60"
+                                >
+                                  <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                    {loadingKey === `${nivel.id}_${year}_pdf`
+                                      ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                      : <FileText className={`h-4 w-4 ${colors.textColor}`} />}
+                                  </div>
+                                  <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">Examen PDF</span>
+                                </button>
 
-                              return isUnlocked ? (
-                                <>
-                                  <button 
-                                    onClick={() => setActivePdf({ 
-                                      title: customResource?.pdfTitle || `${config.title} (${year}) — ${nivel.name} Examen Resuelto`, 
-                                      url: realPdfUrl 
-                                    })}
-                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
-                                  >
-                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                      <FileText className={`h-4 w-4 ${colors.textColor}`} />
-                                    </div>
-                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                      Examen PDF
-                                    </span>
-                                  </button>
+                                {/* Video */}
+                                <button
+                                  disabled={loadingKey === `${nivel.id}_${year}_video`}
+                                  onClick={async () => {
+                                    const key = `${nivel.id}_${year}_video`
+                                    setLoadingKey(key)
+                                    const res = await fetchResource(nivel.id, year)
+                                    setLoadingKey(null)
+                                    const url = res?.video_url || ""
+                                    const title = res?.video_title || `${config.title} (${year}) — ${nivel.name} Resolución en Video`
+                                    if (url) {
+                                      setActiveVideo({ title, url })
+                                    } else {
+                                      toast.info("Aún no hay video para esta edición.", { duration: 4000 })
+                                    }
+                                  }}
+                                  className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer disabled:opacity-60"
+                                >
+                                  <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                    {loadingKey === `${nivel.id}_${year}_video`
+                                      ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                      : <PlayCircle className={`h-4 w-4 ${colors.textColor}`} />}
+                                  </div>
+                                  <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">Video Explicativo</span>
+                                </button>
 
-                                  <button 
-                                    onClick={() => setActiveVideo({ 
-                                      title: customResource?.videoTitle || `${config.title} (${year}) — ${nivel.name} Resolución en Video`, 
-                                      url: realVideoUrl 
-                                    })}
-                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
-                                  >
-                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                      <PlayCircle className={`h-4 w-4 ${colors.textColor}`} />
-                                    </div>
-                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                      Video Explicativo
-                                    </span>
-                                  </button>
-
-                                  <button 
-                                    onClick={() => setActivePdf({ 
-                                      title: customResource?.simulacroTitle || `${config.title} (${year}) — ${nivel.name} Simulacro Oficial`, 
-                                      url: realSimulacroUrl 
-                                    })}
-                                    className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer"
-                                  >
-                                    <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                      <ClipboardCheck className={`h-4 w-4 ${colors.textColor}`} />
-                                    </div>
-                                    <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">
-                                      Simulacro
-                                    </span>
-                                  </button>
-                                </>
-                              ) : (
-                                // BLOQUEADO PARA ALUMNO FREE
+                                {/* Simulacro */}
+                                <button
+                                  disabled={loadingKey === `${nivel.id}_${year}_sim`}
+                                  onClick={async () => {
+                                    const key = `${nivel.id}_${year}_sim`
+                                    setLoadingKey(key)
+                                    const res = await fetchResource(nivel.id, year)
+                                    setLoadingKey(null)
+                                    const rawUrl = res?.simulacro_url || ""
+                                    const title = res?.simulacro_title || `${config.title} (${year}) — ${nivel.name} Simulacro Oficial`
+                                    if (rawUrl) {
+                                      setActivePdf({ title, url: resolvePdfUrl(rawUrl) })
+                                    } else {
+                                      toast.info("Aún no hay simulacro para esta edición.", { duration: 4000 })
+                                    }
+                                  }}
+                                  className="flex flex-col items-center gap-1 group w-1/3 cursor-pointer disabled:opacity-60"
+                                >
+                                  <div className={`h-9 w-9 rounded-xl ${colors.lightBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                                    {loadingKey === `${nivel.id}_${year}_sim`
+                                      ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                      : <ClipboardCheck className={`h-4 w-4 ${colors.textColor}`} />}
+                                  </div>
+                                  <span className="text-[8px] font-black uppercase text-muted-foreground text-center leading-none mt-0.5 group-hover:text-foreground">Simulacro</span>
+                                </button>
+                              </>
+                            ) : (
+                              // BLOQUEADO PARA ALUMNO FREE
                                 <div className="flex items-center justify-between w-full gap-2 pl-2">
                                   <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/20">
                                     <Lock className="h-3 w-3" /> Bloqueado (Free)
@@ -575,8 +658,7 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
                                     Desbloquear acceso
                                   </button>
                                 </div>
-                              )
-                            })()}
+                              )}
                           </div>
                         </div>
                       ) : (
@@ -613,14 +695,74 @@ export function UnifiedSolucionarioView({ id, logo }: { id: string; logo?: strin
                                 <div className="flex justify-around items-center w-full max-w-[120px] mt-1">
                                   {isUnlocked ? (
                                     <>
-                                      <button className="group p-1 cursor-pointer" title="Examen oficial">
-                                        <FileText className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      {/* Examen PDF */}
+                                      <button
+                                        className="group p-1 cursor-pointer disabled:opacity-60"
+                                        title="Examen oficial"
+                                        disabled={loadingKey === `${nivel.id}_${year}_pdf_s`}
+                                        onClick={async () => {
+                                          const key = `${nivel.id}_${year}_pdf_s`
+                                          setLoadingKey(key)
+                                          const res = await fetchResource(nivel.id, year)
+                                          setLoadingKey(null)
+                                          const rawUrl = res?.pdf_url || ""
+                                          const title = res?.pdf_title || `${config.title} (${year}) — ${nivel.name} / ${stageName}`
+                                          if (rawUrl) {
+                                            setActivePdf({ title, url: resolvePdfUrl(rawUrl) })
+                                          } else {
+                                            toast.info("Aún no hay examen PDF para esta edición.", { duration: 4000 })
+                                          }
+                                        }}
+                                      >
+                                        {loadingKey === `${nivel.id}_${year}_pdf_s`
+                                          ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                          : <FileText className={`h-4 w-4 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />}
                                       </button>
-                                      <button className="group p-1 cursor-pointer" title="Solución en video">
-                                        <PlayCircle className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      {/* Video */}
+                                      <button
+                                        className="group p-1 cursor-pointer disabled:opacity-60"
+                                        title="Solución en video"
+                                        disabled={loadingKey === `${nivel.id}_${year}_video_s`}
+                                        onClick={async () => {
+                                          const key = `${nivel.id}_${year}_video_s`
+                                          setLoadingKey(key)
+                                          const res = await fetchResource(nivel.id, year)
+                                          setLoadingKey(null)
+                                          const url = res?.video_url || ""
+                                          const title = res?.video_title || `${config.title} (${year}) — ${nivel.name} / ${stageName}`
+                                          if (url) {
+                                            setActiveVideo({ title, url })
+                                          } else {
+                                            toast.info("Aún no hay video para esta edición.", { duration: 4000 })
+                                          }
+                                        }}
+                                      >
+                                        {loadingKey === `${nivel.id}_${year}_video_s`
+                                          ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                          : <PlayCircle className={`h-4 w-4 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />}
                                       </button>
-                                      <button className="group p-1 cursor-pointer" title="Examen simulacro">
-                                        <ClipboardCheck className={`h-4.5 w-4.5 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />
+                                      {/* Simulacro */}
+                                      <button
+                                        className="group p-1 cursor-pointer disabled:opacity-60"
+                                        title="Examen simulacro"
+                                        disabled={loadingKey === `${nivel.id}_${year}_sim_s`}
+                                        onClick={async () => {
+                                          const key = `${nivel.id}_${year}_sim_s`
+                                          setLoadingKey(key)
+                                          const res = await fetchResource(nivel.id, year)
+                                          setLoadingKey(null)
+                                          const rawUrl = res?.simulacro_url || ""
+                                          const title = res?.simulacro_title || `${config.title} (${year}) — ${nivel.name} / ${stageName} Simulacro`
+                                          if (rawUrl) {
+                                            setActivePdf({ title, url: resolvePdfUrl(rawUrl) })
+                                          } else {
+                                            toast.info("Aún no hay simulacro para esta edición.", { duration: 4000 })
+                                          }
+                                        }}
+                                      >
+                                        {loadingKey === `${nivel.id}_${year}_sim_s`
+                                          ? <div className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                          : <ClipboardCheck className={`h-4 w-4 text-muted-foreground group-hover:${colors.textColor} transition-colors`} />}
                                       </button>
                                     </>
                                   ) : (

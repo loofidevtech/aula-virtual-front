@@ -35,8 +35,10 @@ export default function RegistroPage() {
       if (authData.user) {
         // Guardar usuario en localStorage
         localStorage.setItem("currentUser", JSON.stringify({
+          id: authData.user.id,
           name: data.name,
-          email: data.email
+          email: data.email,
+          role: "student"
         }))
 
         // Intentar insertar en la tabla perfiles

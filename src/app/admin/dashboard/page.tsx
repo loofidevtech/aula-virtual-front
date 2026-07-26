@@ -20,7 +20,11 @@ import {
   PlayCircle,
   Save,
   UploadCloud,
-  Check
+  Check,
+  Swords,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +41,10 @@ import { getCourse } from "@/lib/data/courses"
 import { freemiumService, Material } from "@/lib/freemium-service"
 import { storageService } from "@/lib/storage-service"
 import { videoService } from "@/lib/video-service"
+import { solucionarioService } from "@/lib/solucionario-service"
+import { quizService, QuizQuestion } from "@/lib/quiz-service"
+import { supabase } from "@/lib/supabase"
+import { toast } from "sonner"
 
 function AdminDashboardContent() {
   const router = useRouter()
@@ -92,52 +100,166 @@ function AdminDashboardContent() {
   const [solucionarioId, setSolucionarioId] = useState("concurso_matematica_binaria")
   const [solNivelId, setSolNivelId] = useState("1")
   const [solYear, setSolYear] = useState(2026)
-  const [solPdfUrl, setSolPdfUrl] = useState("/materials/solucionario_2026.pdf")
-  const [solVideoUrl, setSolVideoUrl] = useState("https://www.youtube.com/embed/dQw4w9WgXcQ")
-  const [solSimulacroUrl, setSolSimulacroUrl] = useState("/materials/simulacro_2026.pdf")
+  const [solPdfUrl, setSolPdfUrl] = useState("")
+  const [solVideoUrl, setSolVideoUrl] = useState("")
+
+  // Admin Own Password Update States
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [passwordUpdating, setPasswordUpdating] = useState(false)
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newPassword) {
+      toast.error("Por favor ingresa la nueva contraseña.")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Las contraseñas no coinciden.")
+      return
+    }
+    if (newPassword.length < 6) {
+      toast.error("La contraseña debe tener al menos 6 caracteres.")
+      return
+    }
+
+    setPasswordUpdating(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+      if (error) {
+        toast.error(`Error: ${error.message}`)
+      } else {
+        toast.success("Contraseña actualizada exitosamente.")
+        setNewPassword("")
+        setConfirmPassword("")
+        setShowPasswordModal(false)
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error al actualizar la contraseña.")
+    } finally {
+      setPasswordUpdating(false)
+    }
+  }
+
+  // Quiz Questions States
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([])
+  const [quizLoading, setQuizLoading] = useState(false)
+  const [quizSaving, setQuizSaving] = useState(false)
+  const [qSolucionarioId, setQSolucionarioId] = useState("concurso_matematica_binaria")
+  const [qNivelId, setQNivelId] = useState("1")
+  const [qQuestion, setQQuestion] = useState("")
+  const [qOptions, setQOptions] = useState(["" , "", "", ""])
+  const [qCorrectAnswer, setQCorrectAnswer] = useState(0)
+  const [qPoints, setQPoints] = useState(10)
+  const [qDifficulty, setQDifficulty] = useState<"fácil" | "medio" | "difícil">("medio")
+  const [qExplanation, setQExplanation] = useState("")
+
+  const loadQuizQuestions = async () => {
+    setQuizLoading(true)
+    const data = await quizService.getAllQuestions()
+    setQuizQuestions(data)
+    setQuizLoading(false)
+  }
+
+  const handleCreateQuestion = async () => {
+    if (!qQuestion.trim() || qOptions.some(o => !o.trim())) {
+      toast.error("Completa la pregunta y todas las opciones.")
+      return
+    }
+    setQuizSaving(true)
+    const result = await quizService.createQuestion({
+      solucionario_id: qSolucionarioId,
+      nivel_id: qNivelId,
+      course_id: null,
+      question: qQuestion,
+      options: qOptions,
+      correct_answer: qCorrectAnswer,
+      points: qPoints,
+      difficulty: qDifficulty,
+      explanation: qExplanation || null,
+    })
+    setQuizSaving(false)
+    if (result.success) {
+      toast.success("Pregunta creada exitosamente.")
+      setQQuestion("")
+      setQOptions(["", "", "", ""])
+      setQExplanation("")
+      setQCorrectAnswer(0)
+      loadQuizQuestions()
+    } else {
+      toast.error(`Error: ${result.error}`)
+    }
+  }
+
+  const handleDeleteQuestion = async (id: string) => {
+    const result = await quizService.deleteQuestion(id)
+    if (result.success) {
+      toast.success("Pregunta eliminada.")
+      setQuizQuestions(prev => prev.filter(q => q.id !== id))
+    } else {
+      toast.error(`Error: ${result.error}`)
+    }
+  }
+
+  const [solSimulacroUrl, setSolSimulacroUrl] = useState("")
   const [solIsFree, setSolIsFree] = useState(true)
   const [isSavingSol, setIsSavingSol] = useState(false)
   const [solSaveSuccess, setSolSaveSuccess] = useState(false)
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false)
+  const [uploadPdfError, setUploadPdfError] = useState<string | null>(null)
+  const [isUploadingSimulacro, setIsUploadingSimulacro] = useState(false)
+  const [uploadSimulacroError, setUploadSimulacroError] = useState<string | null>(null)
 
   const handleSaveSolucionario = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSavingSol(true)
     
-    // Guardar recursos (Examen PDF, Video, Simulacro) por Solucionario, Nivel y Año
-    freemiumService.saveSolucionarioYearResource({
-      solucionarioId,
-      nivelId: solNivelId,
+    // Guardar recursos en Supabase (Single Source of Truth)
+    const result = await solucionarioService.saveResource({
+      solucionario_id: solucionarioId,
+      nivel_id: solNivelId,
       year: solYear,
-      pdfUrl: solPdfUrl,
-      pdfTitle: `Examen Resuelto ${solYear} (Nivel ${solNivelId})`,
-      videoUrl: solVideoUrl,
-      videoTitle: `Resolución en Video ${solYear} (Nivel ${solNivelId})`,
-      simulacroUrl: solSimulacroUrl,
-      simulacroTitle: `Simulacro Oficial ${solYear} (Nivel ${solNivelId})`,
-      isFree: solIsFree
+      pdf_url: solPdfUrl || undefined,
+      pdf_title: `Examen Resuelto ${solYear} (Nivel ${solNivelId})`,
+      video_url: solVideoUrl || undefined,
+      video_title: `Resolución en Video ${solYear} (Nivel ${solNivelId})`,
+      simulacro_url: solSimulacroUrl || undefined,
+      simulacro_title: `Simulacro Oficial ${solYear} (Nivel ${solNivelId})`,
+      is_free: solIsFree
     })
 
-    setTimeout(() => {
-      setIsSavingSol(false)
+    setIsSavingSol(false)
+
+    if (result.success) {
       setSolSaveSuccess(true)
+      toast.success("Recursos guardados correctamente en Supabase")
       setTimeout(() => setSolSaveSuccess(false), 3000)
-    }, 500)
+    } else {
+      toast.error(`Error al guardar: ${result.error ?? "Error desconocido"}`)
+    }
   }
 
-  // Auto-cargar recursos existentes al cambiar Solucionario, Nivel o Año
+  // Auto-cargar recursos existentes al cambiar Solucionario, Nivel o Año (desde Supabase)
   useEffect(() => {
-    const existing = freemiumService.getSolucionarioYearResource(solucionarioId, solNivelId, solYear)
-    if (existing) {
-      setSolPdfUrl(existing.pdfUrl || "")
-      setSolVideoUrl(existing.videoUrl || "")
-      setSolSimulacroUrl(existing.simulacroUrl || "")
-      setSolIsFree(existing.isFree ?? true)
-    } else {
-      setSolPdfUrl(`/materials/${solucionarioId}_n${solNivelId}_${solYear}.pdf`)
-      setSolVideoUrl("https://www.youtube.com/embed/dQw4w9WgXcQ")
-      setSolSimulacroUrl(`/materials/simulacro_n${solNivelId}_${solYear}.pdf`)
-      setSolIsFree(true)
+    const loadExistingResource = async () => {
+      const existing = await solucionarioService.getResource(solucionarioId, solNivelId, solYear)
+      if (existing) {
+        setSolPdfUrl(existing.pdf_url || "")
+        setSolVideoUrl(existing.video_url || "")
+        setSolSimulacroUrl(existing.simulacro_url || "")
+        setSolIsFree(existing.is_free ?? true)
+      } else {
+        // No hay recurso guardado aún → campos vacíos (no URLs locales falsas)
+        setSolPdfUrl("")
+        setSolVideoUrl("")
+        setSolSimulacroUrl("")
+        setSolIsFree(true)
+      }
     }
+    loadExistingResource()
   }, [solucionarioId, solNivelId, solYear])
 
   useEffect(() => {
@@ -377,6 +499,13 @@ function AdminDashboardContent() {
           >
             <Video className="h-4 w-4 text-[#22c55e]" /> Subir Video
           </Button>
+          <Button 
+            onClick={() => setShowPasswordModal(true)}
+            variant="outline" 
+            className="rounded-xl gap-2 border-border/50 hover:bg-muted/50"
+          >
+            <Settings2 className="h-4 w-4 text-amber-500" /> Cambiar Clave
+          </Button>
         </div>
       </div>
 
@@ -444,6 +573,9 @@ function AdminDashboardContent() {
           <TabsTrigger value="games" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
             <Gamepad2 className="h-4 w-4" /> Práctica con Albert (Juegos)
           </TabsTrigger>
+          <TabsTrigger value="preguntas" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2" onClick={loadQuizQuestions}>
+            <Swords className="h-4 w-4" /> Gestión de Preguntas
+          </TabsTrigger>
           <TabsTrigger value="materials" className="rounded-lg px-6 py-3 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all flex items-center gap-2">
             <FileText className="h-4 w-4" /> Gestionar Material PDF
           </TabsTrigger>
@@ -487,8 +619,6 @@ function AdminDashboardContent() {
                     <option value="selectivo_onem">ONEM - Concurso Selectivo</option>
                     <option value="olimpiada_logical">Olimpiada Matemática de Logical</option>
                     <option value="competencia_paralela">Competencia Paralela de Matemática</option>
-                    <option value="canguro_matematico">Canguro Matemático</option>
-                    <option value="conamat">CONAMAT</option>
                     <option value="concurso_binacional">Concurso Binacional de Matemáticas</option>
                     <option value="copernicus_math">Concurso Copernicus Math</option>
                     <option value="descubrimiento_matematico">Concurso Descubrimiento Matemático</option>
@@ -499,6 +629,9 @@ function AdminDashboardContent() {
                     <option value="olimpiada_imc_de_matematicas">Olimpiada IMC de Matemáticas</option>
                     <option value="irani_combinatoria">Olimpiada Iraní de Combinatoria</option>
                     <option value="irani_geometria">Olimpiada Iraní de Geometría</option>
+                    <option value="olimpiada_navidena">Olimpiada Navideña de Matemáticas</option>
+                    <option value="torneo_ciudades">Torneo de las Ciudades</option>
+                    <option value="torneo_jovenes_matematicos">Torneo de Jóvenes Matemáticos</option>
                   </select>
                 </div>
 
@@ -546,39 +679,80 @@ function AdminDashboardContent() {
                     Sube el archivo PDF del examen resuelto a Supabase Storage o pega la URL pública.
                   </p>
 
-                  <div className="border-2 border-dashed border-amber-500/30 rounded-2xl p-4 bg-amber-500/5 hover:bg-amber-500/10 transition-colors text-center cursor-pointer relative group">
+                  <div className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer relative group transition-colors ${
+                    uploadPdfError
+                      ? "border-red-500/60 bg-red-500/10 hover:bg-red-500/15"
+                      : "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10"
+                  }`}>
                     <input
                       type="file"
                       accept="application/pdf"
+                      disabled={isUploadingPdf}
                       onChange={async (e) => {
                         const file = e.target.files?.[0]
                         if (!file) return
+                        setUploadPdfError(null)
+                        setIsUploadingPdf(true)
                         try {
                           const res = await storageService.uploadMaterialPDF(file, solucionarioId)
                           setSolPdfUrl(res.url)
-                        } catch (err: any) {
-                          alert(err.message || "Error al subir PDF a Supabase Storage.")
+                          toast.success(`✅ PDF subido: ${res.fileName} (${res.sizeFormatted})`)
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : "Error desconocido al subir PDF."
+                          setUploadPdfError(msg)
+                          console.error("[PDF Upload Error]", msg)
+                        } finally {
+                          setIsUploadingPdf(false)
+                          e.target.value = ""
                         }
                       }}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
                     />
                     <div className="flex flex-col items-center gap-1">
-                      <UploadCloud className="h-6 w-6 text-amber-400 mb-1" />
-                      <span className="text-xs font-black text-amber-400 uppercase tracking-wider">
-                        Subir PDF a Supabase Storage
+                      <UploadCloud className={`h-6 w-6 mb-1 ${
+                        isUploadingPdf ? "animate-bounce text-amber-300"
+                        : uploadPdfError ? "text-red-400"
+                        : "text-amber-400"
+                      }`} />
+                      <span className={`text-xs font-black uppercase tracking-wider ${
+                        uploadPdfError ? "text-red-400" : "text-amber-400"
+                      }`}>
+                        {isUploadingPdf ? "Subiendo..." : uploadPdfError ? "Error al subir — reintentar" : "Subir PDF a Supabase Storage"}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-semibold">
-                        Haz clic para seleccionar el archivo .pdf de tu equipo
+                        Haz clic para seleccionar el archivo .pdf
                       </span>
                     </div>
                   </div>
 
+                  {/* Error inline visible */}
+                  {uploadPdfError && (
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/40 text-left">
+                      <span className="text-red-400 text-xs font-black shrink-0 mt-0.5">⚠ ERROR:</span>
+                      <p className="text-[11px] text-red-300 font-mono leading-snug break-all">{uploadPdfError}</p>
+                    </div>
+                  )}
+
+                  {/* Previsualización de URL subida */}
+                  {solPdfUrl && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <FileText className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <a
+                        href={solPdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-mono text-emerald-400 hover:underline truncate"
+                      >
+                        {solPdfUrl}
+                      </a>
+                    </div>
+                  )}
+
                   <Input
-                    placeholder="URL del PDF (https://.../materials/...pdf)"
+                    placeholder="O pega la URL pública del PDF (https://...)"
                     value={solPdfUrl}
-                    onChange={(e) => setSolPdfUrl(e.target.value)}
+                    onChange={(e) => { setSolPdfUrl(e.target.value); setUploadPdfError(null) }}
                     className="h-11 rounded-xl bg-background border-border/50 text-xs font-mono"
-                    required
                   />
                 </div>
 
@@ -621,10 +795,84 @@ function AdminDashboardContent() {
                   <h4 className="text-sm font-black text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                     <FileText className="h-4 w-4" /> 3. Simulacro Oficial (PDF)
                   </h4>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Sube el archivo PDF del simulacro oficial a Supabase Storage o pega la URL pública.
+                  </p>
+
+                  {/* Uploader drag-and-drop */}
+                  <div className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer relative group transition-colors ${
+                    uploadSimulacroError
+                      ? "border-red-500/60 bg-red-500/10 hover:bg-red-500/15"
+                      : "border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10"
+                  }`}>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      disabled={isUploadingSimulacro}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        setUploadSimulacroError(null)
+                        setIsUploadingSimulacro(true)
+                        try {
+                          const res = await storageService.uploadMaterialPDF(file, `${solucionarioId}/simulacros`)
+                          setSolSimulacroUrl(res.url)
+                          toast.success(`✅ Simulacro subido: ${res.fileName} (${res.sizeFormatted})`)
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : "Error desconocido al subir simulacro."
+                          setUploadSimulacroError(msg)
+                          console.error("[Simulacro Upload Error]", msg)
+                        } finally {
+                          setIsUploadingSimulacro(false)
+                          e.target.value = ""
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                    />
+                    <div className="flex flex-col items-center gap-1">
+                      <UploadCloud className={`h-6 w-6 mb-1 ${
+                        isUploadingSimulacro ? "animate-bounce text-emerald-300"
+                        : uploadSimulacroError ? "text-red-400"
+                        : "text-emerald-400"
+                      }`} />
+                      <span className={`text-xs font-black uppercase tracking-wider ${
+                        uploadSimulacroError ? "text-red-400" : "text-emerald-400"
+                      }`}>
+                        {isUploadingSimulacro ? "Subiendo..." : uploadSimulacroError ? "Error al subir — reintentar" : "Subir Simulacro a Supabase Storage"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-semibold">
+                        Haz clic para seleccionar el archivo .pdf del simulacro
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Error inline visible */}
+                  {uploadSimulacroError && (
+                    <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/40 text-left">
+                      <span className="text-red-400 text-xs font-black shrink-0 mt-0.5">⚠ ERROR:</span>
+                      <p className="text-[11px] text-red-300 font-mono leading-snug break-all">{uploadSimulacroError}</p>
+                    </div>
+                  )}
+
+                  {/* Previsualización de URL subida */}
+                  {solSimulacroUrl && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <FileText className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <a
+                        href={solSimulacroUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[10px] font-mono text-emerald-400 hover:underline truncate"
+                      >
+                        {solSimulacroUrl}
+                      </a>
+                    </div>
+                  )}
+
                   <Input
-                    placeholder="URL del PDF del Simulacro"
+                    placeholder="O pega la URL pública del simulacro (https://...)"
                     value={solSimulacroUrl}
-                    onChange={(e) => setSolSimulacroUrl(e.target.value)}
+                    onChange={(e) => { setSolSimulacroUrl(e.target.value); setUploadSimulacroError(null) }}
                     className="h-11 rounded-xl bg-background border-border/50 text-xs font-mono"
                   />
                 </div>
@@ -1502,7 +1750,261 @@ function AdminDashboardContent() {
             </div>
           </div>
         </TabsContent>
+        {/* ── TAB PREGUNTAS ────────────────────────────────────────────────── */}
+        <TabsContent value="preguntas" className="space-y-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+
+            {/* Formulario nueva pregunta */}
+            <div className="xl:col-span-2 bg-card p-6 md:p-8 rounded-[2rem] border border-border/50 shadow-xl space-y-5">
+              <div className="border-b border-border/50 pb-4">
+                <span className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                  <Swords className="h-4 w-4" /> Nueva Pregunta
+                </span>
+                <h3 className="text-xl font-black text-white">Crear Pregunta de Reto</h3>
+              </div>
+
+              {/* Olimpiada */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Olimpiada</label>
+                <select value={qSolucionarioId} onChange={e => setQSolucionarioId(e.target.value)}
+                  className="w-full h-12 rounded-xl bg-muted/50 border border-border/50 px-4 text-foreground font-bold outline-none cursor-pointer text-sm">
+                  <option value="concurso_matematica_binaria">CMB - Matemática Binaria</option>
+                  <option value="selectivo_onem">ONEM - Concurso Selectivo</option>
+                  <option value="olimpiada_logical">Olimpiada Matemática Logical</option>
+                  <option value="competencia_paralela">Competencia Paralela</option>
+                  <option value="olimpiada_mayo">Olimpiada de Mayo</option>
+                  <option value="torneo_ciudades">Torneo de las Ciudades</option>
+                </select>
+              </div>
+
+              {/* Nivel + Dificultad */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Nivel</label>
+                  <select value={qNivelId} onChange={e => setQNivelId(e.target.value)}
+                    className="w-full h-11 rounded-xl bg-muted/50 border border-border/50 px-3 text-foreground font-bold outline-none cursor-pointer text-sm">
+                    <option value="1">Nivel 1</option>
+                    <option value="2">Nivel 2</option>
+                    <option value="3">Nivel 3</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Dificultad</label>
+                  <select value={qDifficulty} onChange={e => setQDifficulty(e.target.value as "fácil" | "medio" | "difícil")}
+                    className="w-full h-11 rounded-xl bg-muted/50 border border-border/50 px-3 text-foreground font-bold outline-none cursor-pointer text-sm">
+                    <option value="fácil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="difícil">Difícil</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Enunciado */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Enunciado de la Pregunta</label>
+                <textarea value={qQuestion} onChange={e => setQQuestion(e.target.value)} rows={3}
+                  placeholder="¿Cuál es el resultado de...?"
+                  className="w-full rounded-xl bg-muted/50 border border-border/50 px-4 py-3 text-foreground font-medium outline-none resize-none text-sm placeholder:text-muted-foreground focus:border-primary/50 transition-colors" />
+              </div>
+
+              {/* Opciones */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Opciones de Respuesta</label>
+                {qOptions.map((opt, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <button
+                      onClick={() => setQCorrectAnswer(i)}
+                      className={`h-8 w-8 rounded-lg shrink-0 text-xs font-black border-2 transition-all cursor-pointer ${
+                        qCorrectAnswer === i
+                          ? "bg-green-500/20 border-green-500 text-green-400"
+                          : "border-border/50 text-muted-foreground hover:border-primary/50"
+                      }`}
+                      title="Marcar como correcta"
+                    >
+                      {String.fromCharCode(65 + i)}
+                    </button>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={e => {
+                        const next = [...qOptions]
+                        next[i] = e.target.value
+                        setQOptions(next)
+                      }}
+                      placeholder={`Opción ${String.fromCharCode(65 + i)}`}
+                      className="flex-1 h-10 rounded-xl bg-muted/50 border border-border/50 px-3 text-foreground font-medium outline-none text-sm placeholder:text-muted-foreground focus:border-primary/50 transition-colors"
+                    />
+                    {qCorrectAnswer === i && <Check className="h-4 w-4 text-green-400 shrink-0" />}
+                  </div>
+                ))}
+                <p className="text-[10px] text-muted-foreground">Haz clic en la letra para marcar la respuesta correcta (verde).</p>
+              </div>
+
+              {/* Puntos */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Puntos</label>
+                <input type="number" min={5} max={100} step={5} value={qPoints} onChange={e => setQPoints(Number(e.target.value))}
+                  className="w-full h-11 rounded-xl bg-muted/50 border border-border/50 px-4 text-foreground font-black outline-none text-sm" />
+              </div>
+
+              {/* Explicación */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Explicación (opcional)</label>
+                <textarea value={qExplanation} onChange={e => setQExplanation(e.target.value)} rows={2}
+                  placeholder="Explica brevemente por qué esa es la respuesta correcta..."
+                  className="w-full rounded-xl bg-muted/50 border border-border/50 px-4 py-3 text-foreground font-medium outline-none resize-none text-sm placeholder:text-muted-foreground focus:border-primary/50 transition-colors" />
+              </div>
+
+              <button
+                onClick={handleCreateQuestion}
+                disabled={quizSaving}
+                className="w-full h-14 rounded-2xl bg-primary text-white font-black text-sm hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {quizSaving
+                  ? <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  : <><Plus className="h-5 w-5" /> Guardar Pregunta</>}
+              </button>
+            </div>
+
+            {/* Lista de preguntas */}
+            <div className="xl:col-span-3 bg-card p-6 md:p-8 rounded-[2rem] border border-border/50 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-border/50 pb-4">
+                <div>
+                  <h3 className="text-xl font-black text-white">Banco de Preguntas</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{quizQuestions.length} preguntas registradas</p>
+                </div>
+                <button onClick={loadQuizQuestions} disabled={quizLoading}
+                  className="px-4 py-2 rounded-xl bg-muted/50 border border-border/50 text-xs font-black text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-60">
+                  {quizLoading ? "Cargando..." : "Actualizar"}
+                </button>
+              </div>
+
+              {quizLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                </div>
+              ) : quizQuestions.length === 0 ? (
+                <div className="text-center py-20 space-y-3">
+                  <Swords className="h-12 w-12 text-muted-foreground mx-auto animate-pulse" />
+                  <p className="font-black text-white">No hay preguntas aún</p>
+                  <p className="text-xs text-muted-foreground">Crea la primera pregunta con el formulario de la izquierda.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                  {quizQuestions.map((q) => (
+                    <div key={q.id} className="bg-muted/30 border border-border/50 rounded-2xl p-4 flex gap-3 group">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            q.difficulty === 'fácil' ? 'bg-green-500/15 text-green-400' :
+                            q.difficulty === 'medio' ? 'bg-amber-500/15 text-amber-400' :
+                            'bg-red-500/15 text-red-400'
+                          }`}>{q.difficulty}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full">
+                            {q.solucionario_id?.replace('concurso_matematica_binaria', 'CMB').replace('selectivo_onem', 'ONEM').replace('_', ' ')}
+                          </span>
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{q.points} pts</span>
+                        </div>
+                        <p className="text-sm font-bold text-foreground leading-snug line-clamp-2">{q.question}</p>
+                        <div className="grid grid-cols-2 gap-1 mt-2">
+                          {q.options.map((opt, i) => (
+                            <p key={i} className={`text-[11px] font-medium px-2 py-0.5 rounded-lg ${
+                              i === q.correct_answer ? 'text-green-400 bg-green-500/10' : 'text-muted-foreground'
+                            }`}>
+                              {String.fromCharCode(65 + i)}. {opt}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteQuestion(q.id)}
+                        className="h-8 w-8 rounded-xl border border-destructive/20 text-destructive hover:bg-destructive/10 flex items-center justify-center transition-colors shrink-0 opacity-0 group-hover:opacity-100 cursor-pointer"
+                        title="Eliminar pregunta"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
       </Tabs>
+
+      {/* ── MODAL CAMBIAR CONTRASEÑA ── */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div 
+            className="absolute inset-0" 
+            onClick={() => setShowPasswordModal(false)} 
+          />
+          
+          <div className="relative w-full max-w-md bg-card border border-border/40 rounded-[2.5rem] shadow-2xl p-6 md:p-8 flex flex-col z-10 text-foreground overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-primary to-accent" />
+            
+            <div className="flex items-center justify-between border-b border-border/30 pb-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black text-white">Cambiar Contraseña</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Actualiza tu clave de acceso de administrador</p>
+              </div>
+              <button 
+                onClick={() => setShowPasswordModal(false)}
+                className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-white transition-all cursor-pointer"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Nueva Contraseña</label>
+                <Input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="h-12 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-muted-foreground">Confirmar Contraseña</label>
+                <Input
+                  type="password"
+                  placeholder="Repite la nueva contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="h-12 rounded-xl bg-muted/50 border-none focus-visible:ring-primary/20"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="flex-1 h-12 rounded-xl font-bold border-border/50 text-muted-foreground hover:bg-muted"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={passwordUpdating}
+                  className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                >
+                  {passwordUpdating ? (
+                    <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    "Guardar Clave"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
